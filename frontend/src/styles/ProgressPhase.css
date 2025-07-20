@@ -1,0 +1,70 @@
+.progress-phase {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid var(--border-color);
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.progress-phase.active {
+  border-left-color: var(--warning-color);
+  background-color: rgba(255, 152, 0, 0.1);
+}
+
+.progress-phase.completed {
+  border-left-color: var(--success-color);
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.phase-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-weight: bold;
+  font-size: 18px;
+  background-color: var(--border-color);
+  color: white;
+}
+
+.progress-phase.active .phase-icon {
+  background-color: var(--warning-color);
+  animation: pulse 2s infinite;
+}
+
+.progress-phase.completed .phase-icon {
+  background-color: var(--success-color);
+}
+
+.phase-content {
+  flex: 1;
+}
+
+.phase-title {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  color: var(--text-color);
+}
+
+.phase-description {
+  margin: 0;
+  color: var(--light-text);
+  font-size: 14px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

@@ -1,0 +1,49 @@
+.novel-preview {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.novel-header {
+  background-color: var(--card-background);
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.novel-header h1 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.novel-meta {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.novel-meta p {
+  margin: 0;
+  color: var(--light-text);
+  font-size: 14px;
+}
+
+.novel-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+  .novel-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .novel-meta {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

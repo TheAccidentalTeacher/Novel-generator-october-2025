@@ -1,0 +1,73 @@
+.chapter-viewer {
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 30px;
+  min-height: 500px;
+}
+
+.chapter-viewer.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--light-text);
+  font-style: italic;
+}
+
+.chapter-header {
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.chapter-header h2 {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chapter-number {
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chapter-title {
+  color: var(--text-color);
+  font-size: 24px;
+}
+
+.chapter-meta {
+  color: var(--light-text);
+  font-size: 14px;
+}
+
+.chapter-content {
+  line-height: 1.8;
+  font-family: Georgia, serif;
+}
+
+.chapter-content p {
+  margin-bottom: 20px;
+  text-align: justify;
+  text-indent: 2em;
+}
+
+.chapter-content p:first-child {
+  text-indent: 0;
+}
+
+@media (max-width: 768px) {
+  .chapter-viewer {
+    padding: 20px;
+  }
+  
+  .chapter-title {
+    font-size: 20px;
+  }
+  
+  .chapter-content {
+    font-size: 16px;
+  }
+}

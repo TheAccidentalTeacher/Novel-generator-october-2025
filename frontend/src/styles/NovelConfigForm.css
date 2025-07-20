@@ -1,0 +1,60 @@
+.novel-config-form {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #fafafa;
+}
+
+.novel-config-form h3 {
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.range-value {
+  text-align: center;
+  margin-top: 5px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.chapter-length-info {
+  text-align: center;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: var(--card-background);
+  border-radius: 4px;
+  color: var(--light-text);
+}
+
+.chapter-length-info strong {
+  color: var(--primary-color);
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}

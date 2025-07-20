@@ -1,0 +1,60 @@
+.chapter-list {
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  height: fit-content;
+}
+
+.chapter-list h2 {
+  margin-bottom: 20px;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.chapter-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chapter-list li {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chapter-list li:last-child {
+  border-bottom: none;
+}
+
+.chapter-list li:hover {
+  background-color: #f5f5f5;
+}
+
+.chapter-list li.selected {
+  background-color: rgba(74, 111, 165, 0.1);
+  border-left: 4px solid var(--primary-color);
+}
+
+.chapter-number {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-right: 10px;
+  min-width: 30px;
+}
+
+.chapter-title {
+  flex: 1;
+  font-size: 14px;
+}
+
+.chapter-words {
+  font-size: 12px;
+  color: var(--light-text);
+  margin-left: 10px;
+}

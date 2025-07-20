@@ -1,0 +1,16 @@
+{
+  "name": "somers-novel-generator",
+  "version": "1.0.0",
+  "description": "AI-powered novel generator deployed on Railway",
+  "main": "backend/app.js",
+  "scripts": {
+    "start": "node backend/app.js",
+    "build": "cd frontend && npm install && npm run build && cd .. && if not exist backend\\public mkdir backend\\public && xcopy frontend\\dist\\* backend\\public\\ /E /Y",
+    "dev": "cd backend && npm run dev",
+    "install-deps": "cd backend && npm install && cd ../frontend && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {}
+}

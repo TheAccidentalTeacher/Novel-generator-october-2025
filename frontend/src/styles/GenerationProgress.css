@@ -1,0 +1,36 @@
+.generation-progress {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--card-background);
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.generation-progress h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+.connection-warning {
+  background-color: var(--warning-color);
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .generation-progress {
+    margin: 20px;
+    padding: 20px;
+  }
+}
