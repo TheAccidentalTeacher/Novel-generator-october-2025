@@ -5,12 +5,19 @@
   "main": "backend/app.js",
   "scripts": {
     "start": "node backend/app.js",
-    "build": "cd frontend && npm install && npm run build && cd .. && if not exist backend\\public mkdir backend\\public && xcopy frontend\\dist\\* backend\\public\\ /E /Y",
-    "dev": "cd backend && npm run dev",
-    "install-deps": "cd backend && npm install && cd ../frontend && npm install"
+    "build": "npm run build:frontend && npm run copy:frontend",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "copy:frontend": "node scripts/copy-frontend.js",
+    "install": "npm run install:all",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "postinstall": "npm run install:all"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "fs-extra": "^11.2.0"
+  }
 }
