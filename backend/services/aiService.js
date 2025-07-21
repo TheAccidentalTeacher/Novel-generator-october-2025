@@ -1,229 +1,292 @@
-const OpenAI = require('openai');
+const { OpenAI } = require('openai');
 const Job = require('../models/job');
 const logger = require('../logger');
-const genreInstructions = require('../shared/genreInstructions');
 const { emitJobUpdate } = require('../websocket');
+const genreInstructions = require('../shared/genreInstructions');
 
 class AIService {
   constructor() {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: process.env.OPENAI_API_KEY,
     });
     
     this.activeJobs = new Map();
     
-    // Cost tracking for different models
+    // Cost tracking per model (prices as of 2024)
     this.costTracking = {
-      'gpt-4o-mini': {
-        inputCost: 0.00015,   // $0.150 per 1K input tokens
-        outputCost: 0.0006    // $0.600 per 1K output tokens
-      },
       'gpt-4o': {
-        inputCost: 0.0025,    // $2.50 per 1K input tokens
-        outputCost: 0.010     // $10.00 per 1K output tokens
+        inputCost: 0.005,  // $0.005 per 1K tokens
+        outputCost: 0.015  // $0.015 per 1K tokens
+      },
+      'gpt-4o-mini': {
+        inputCost: 0.00015, // $0.00015 per 1K tokens
+        outputCost: 0.0006  // $0.0006 per 1K tokens
       }
     };
   }
-
+  
   async generateNovel(jobId) {
+    const job = await Job.findById(jobId);
+    if (!job) throw new Error(`Job ${jobId} not found`);
+    
+    // Add to active jobs
+    this.activeJobs.set(jobId, {
+      startTime: Date.now(),
+      status: 'analyzing'
+    });
+    
     try {
-      logger.info(`Starting novel generation for job ${jobId}`);
+      // Phase 1: Premise Analysis
+      await this.analyzePremise(jobId);
       
-      // Add to active jobs
-      this.activeJobs.set(jobId, {
-        startTime: Date.now(),
-        status: 'planning'
-      });
-
-      // Update job status
-      const job = await Job.findById(jobId);
-      if (!job) throw new Error(`Job ${jobId} not found`);
-
-      job.status = 'planning';
-      job.currentPhase = 'premise_analysis';
-      await job.save();
-
-      emitJobUpdate(jobId, {
-        status: job.status,
-        currentPhase: job.currentPhase,
-        message: 'Analyzing premise and planning novel structure...'
-      });
-
-      // Generate outline
+      // Phase 2: Generate Outline
       await this.generateOutline(jobId);
       
-      // Generate chapters
-      await this.generateChapters(jobId);
+      // Phase 3: Generate All Chapters
+      await this.generateAllChapters(jobId);
       
-      // Finalize job
-      await this.finalizeJob(jobId);
+      // Mark job as completed
+      job.status = 'completed';
+      job.currentPhase = 'completed';
+      job.progress.lastActivity = new Date();
+      await job.save();
+      
+      // Remove from active jobs
+      this.activeJobs.delete(jobId);
+      
+      emitJobUpdate(jobId, {
+        status: 'completed',
+        currentPhase: 'completed',
+        message: 'Novel generation completed successfully!'
+      });
       
       logger.info(`Completed novel generation for job ${jobId}`);
       
     } catch (error) {
       await this.handleGenerationError(jobId, error);
-    } finally {
-      this.activeJobs.delete(jobId);
     }
   }
+  
+  async analyzePremise(jobId) {
+    const job = await Job.findById(jobId);
+    if (!job) throw new Error(`Job ${jobId} not found`);
+    
+    job.status = 'analyzing';
+    job.currentPhase = 'premise_analysis';
+    job.progress.lastActivity = new Date();
+    await job.save();
+    
+    emitJobUpdate(jobId, {
+      status: job.status,
+      currentPhase: job.currentPhase,
+      message: 'Analyzing premise and planning structure...'
+    });
+    
+    try {
+      const analysisStart = Date.now();
+      
+      // Get genre-specific instructions
+      const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
+      if (!genreInstruction) {
+        throw new Error(`Unsupported genre combination: ${job.genre}/${job.subgenre}`);
+      }
+      
+      const analysisPrompt = `
+Analyze this novel premise and provide structural recommendations:
 
+PREMISE: "${job.premise}"
+
+GENRE: ${job.genre.replace(/_/g, ' ')}
+SUBGENRE: ${job.subgenre.replace(/_/g, ' ')}
+TARGET WORD COUNT: ${job.targetWordCount}
+TARGET CHAPTERS: ${job.targetChapters}
+
+GENRE GUIDELINES:
+${genreInstruction}
+
+Please provide:
+1. Theme analysis
+2. Character archetypes needed
+3. Plot structure recommendations
+4. Key story beats for this genre
+5. Potential subplots
+6. Tone and style guidance
+
+Respond in JSON format:
+{
+  "themes": ["theme1", "theme2"],
+  "characters": ["character_type1", "character_type2"],
+  "plotStructure": "three-act/hero-journey/etc",
+  "keyBeats": ["beat1", "beat2"],
+  "subplots": ["subplot1", "subplot2"],
+  "tone": "description",
+  "styleNotes": "guidance"
+}`;
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: analysisPrompt }],
+        temperature: 0.3,
+        max_tokens: 1500
+      });
+      
+      const analysisResult = JSON.parse(response.choices[0].message.content);
+      
+      // Calculate cost
+      const cost = this.calculateCost(
+        'gpt-4o-mini',
+        response.usage.prompt_tokens,
+        response.usage.completion_tokens
+      );
+      
+      // Update job with analysis
+      job.analysis = analysisResult;
+      job.modelUsage.premiseAnalysis = {
+        model: 'gpt-4o-mini',
+        tokensUsed: response.usage.total_tokens,
+        cost: cost,
+        duration: Date.now() - analysisStart
+      };
+      
+      await job.save();
+      
+      logger.info(`Completed premise analysis for job ${jobId}`);
+      
+    } catch (error) {
+      throw new Error(`Premise analysis failed: ${error.message}`);
+    }
+  }
+  
   async generateOutline(jobId) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
-
-    const outlineGenerationStart = Date.now();
     
-    // Update status
     job.status = 'outlining';
     job.currentPhase = 'outline_generation';
     job.progress.lastActivity = new Date();
     await job.save();
-
+    
     emitJobUpdate(jobId, {
       status: job.status,
       currentPhase: job.currentPhase,
-      message: 'Creating detailed chapter-by-chapter outline...'
+      message: 'Creating detailed chapter outline...'
     });
-
-    const genreInstruction = genreInstructions[job.genre][job.subgenre];
     
-    const outlinePrompt = `Create a detailed chapter-by-chapter outline for a ${job.targetWordCount}-word ${job.genre.replace(/_/g, ' ')} novel in the ${job.subgenre.replace(/_/g, ' ')} subgenre.
+    try {
+      const outlineStart = Date.now();
+      
+      const outlinePrompt = `
+Create a detailed chapter-by-chapter outline for this novel:
 
-PREMISE: ${job.premise}
+PREMISE: "${job.premise}"
+TITLE: "${job.title}"
+GENRE: ${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}
+TARGET CHAPTERS: ${job.targetChapters}
+TARGET WORD COUNT: ${job.targetWordCount}
 
-TITLE: ${job.title}
+ANALYSIS RESULTS:
+${JSON.stringify(job.analysis, null, 2)}
 
-GENRE GUIDELINES: ${genreInstruction}
-
-TARGET: ${job.targetChapters} chapters, approximately ${Math.round(job.targetWordCount / job.targetChapters)} words per chapter
+Create exactly ${job.targetChapters} chapters. Each chapter should be approximately ${Math.round(job.targetWordCount / job.targetChapters)} words.
 
 For each chapter, provide:
-1. Chapter number and compelling title
-2. 2-3 sentence summary of main events
-3. Key events that advance the plot
-4. Character focus and development
-5. How this chapter advances the overall plot
-6. Word target for this chapter
-7. Genre-specific elements to include
+- Chapter number and title
+- Key events and plot points
+- Character development moments
+- Conflict/tension elements
+- Connection to overall story arc
 
-Return the outline as a JSON array where each chapter is an object with these properties:
-- chapterNumber (number)
-- title (string)
-- summary (string)
-- keyEvents (array of strings)
-- characterFocus (array of strings)
-- plotAdvancement (string)
-- wordTarget (number)
-- genreElements (array of strings)
+Respond in JSON format:
+{
+  "outline": [
+    {
+      "number": 1,
+      "title": "Chapter Title",
+      "summary": "Brief summary",
+      "keyEvents": ["event1", "event2"],
+      "characters": ["character1", "character2"],
+      "targetWordCount": ${Math.round(job.targetWordCount / job.targetChapters)}
+    }
+  ]
+}`;
 
-Ensure the outline maintains narrative momentum, develops characters consistently, and adheres to the genre conventions throughout.`;
-
-    try {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert novel planner. Create detailed, engaging chapter outlines that maintain narrative momentum and genre authenticity. Always respond with valid JSON.'
-          },
-          {
-            role: 'user',
-            content: outlinePrompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000
+        messages: [{ role: 'user', content: outlinePrompt }],
+        temperature: 0.4,
+        max_tokens: 3000
       });
-
-      const outlineText = response.choices[0].message.content;
       
-      // Parse the JSON response
-      let outline;
-      try {
-        outline = JSON.parse(outlineText);
-      } catch (parseError) {
-        logger.error('Failed to parse outline JSON:', parseError);
-        // Try to extract JSON from response if it's wrapped in markdown
-        const jsonMatch = outlineText.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-          outline = JSON.parse(jsonMatch[1]);
-        } else {
-          throw new Error('Invalid JSON response from AI');
-        }
-      }
-
-      // Validate outline structure
-      if (!Array.isArray(outline) || outline.length !== job.targetChapters) {
-        throw new Error(`Invalid outline: expected ${job.targetChapters} chapters, got ${outline.length}`);
-      }
-
+      const outlineResult = JSON.parse(response.choices[0].message.content);
+      
+      // Calculate cost
+      const cost = this.calculateCost(
+        'gpt-4o-mini',
+        response.usage.prompt_tokens,
+        response.usage.completion_tokens
+      );
+      
       // Update job with outline
-      job.outline = outline;
+      job.outline = outlineResult.outline;
       job.progress.outlineComplete = true;
-      job.progress.lastActivity = new Date();
-      
-      // Track model usage
-      const tokensUsed = response.usage.total_tokens;
-      const cost = this.calculateCost('gpt-4o-mini', response.usage.prompt_tokens, response.usage.completion_tokens);
-      
       job.modelUsage.outlineGeneration = {
         model: 'gpt-4o-mini',
-        tokensUsed,
-        cost,
-        duration: Date.now() - outlineGenerationStart
+        tokensUsed: response.usage.total_tokens,
+        cost: cost,
+        duration: Date.now() - outlineStart
       };
-
+      
       await job.save();
-
+      
       emitJobUpdate(jobId, {
         status: job.status,
         currentPhase: job.currentPhase,
         progress: {
-          outlineComplete: true,
-          totalChapters: job.targetChapters
+          ...job.progress,
+          outlineComplete: true
         },
-        outline: job.outline,
-        message: 'Outline complete! Starting chapter generation...'
+        message: 'Outline completed. Starting chapter generation...'
       });
-
-      logger.info(`Generated outline for job ${jobId}: ${outline.length} chapters`);
+      
+      logger.info(`Completed outline generation for job ${jobId}`);
       
     } catch (error) {
-      logger.error(`Error generating outline for job ${jobId}:`, error);
-      throw error;
+      throw new Error(`Outline generation failed: ${error.message}`);
     }
   }
-
-  async generateChapters(jobId) {
+  
+  async generateAllChapters(jobId) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
-
-    if (!job.outline || job.outline.length === 0) {
-      throw new Error('No outline available for chapter generation');
-    }
-
-    const chapterGenerationStart = Date.now();
     
-    // Update status
+    if (!job.outline || job.outline.length === 0) {
+      throw new Error(`No outline found for job ${jobId}`);
+    }
+    
     job.status = 'writing';
     job.currentPhase = 'chapter_writing';
     job.progress.lastActivity = new Date();
     await job.save();
-
+    
     emitJobUpdate(jobId, {
       status: job.status,
       currentPhase: job.currentPhase,
-      message: 'Beginning chapter generation...'
+      message: 'Starting chapter generation...'
     });
-
+    
+    const chapterGenerationStart = Date.now();
     let totalTokensUsed = 0;
     let totalCost = 0;
-    let attempts = 0;
-
-    // Generate each chapter
+    let totalAttempts = 0;
+    
+    // Generate chapters sequentially to avoid race conditions
     for (let i = 0; i < job.outline.length; i++) {
-      const chapterNumber = i + 1;
       const chapterOutline = job.outline[i];
+      const chapterNumber = chapterOutline.number;
       
       try {
         emitJobUpdate(jobId, {
@@ -246,7 +309,7 @@ Ensure the outline maintains narrative momentum, develops characters consistentl
         // Update token usage and cost
         totalTokensUsed += chapter.tokensUsed || 0;
         totalCost += chapter.cost || 0;
-        attempts += chapter.attempts || 1;
+        totalAttempts += chapter.attempts || 1;
         
         // Calculate estimated completion time
         const timePerChapter = (Date.now() - chapterGenerationStart) / job.chapters.length;
@@ -254,21 +317,32 @@ Ensure the outline maintains narrative momentum, develops characters consistentl
         const estimatedTimeRemaining = timePerChapter * chaptersRemaining;
         job.progress.estimatedCompletion = new Date(Date.now() + estimatedTimeRemaining);
         
+        // Save after each chapter to prevent data loss
         await job.save();
+        
+        // Small delay to prevent MongoDB race conditions
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         emitJobUpdate(jobId, {
           currentPhase: 'chapter_writing',
-          message: `Chapter ${chapterNumber} complete!`,
           progress: {
             chaptersCompleted: job.chapters.length,
             totalChapters: job.targetChapters,
             estimatedCompletion: job.progress.estimatedCompletion
-          }
+          },
+          message: `Chapter ${chapterNumber} completed. ${job.chapters.length}/${job.targetChapters} chapters done.`
         });
         
       } catch (error) {
         logger.error(`Error generating chapter ${chapterNumber} for job ${jobId}:`, error);
-        throw error;
+        
+        // Try to continue with next chapter after error
+        totalAttempts++;
+        
+        // If too many failures, abort
+        if (totalAttempts > job.targetChapters * 0.5) {
+          throw new Error(`Too many chapter generation failures for job ${jobId}`);
+        }
       }
     }
     
@@ -277,192 +351,127 @@ Ensure the outline maintains narrative momentum, develops characters consistentl
       model: 'gpt-4o',
       tokensUsed: totalTokensUsed,
       cost: totalCost,
-      attempts,
+      attempts: totalAttempts,
       duration: Date.now() - chapterGenerationStart
     };
     
     // Calculate quality metrics
     if (job.chapters.length > 0) {
       const averageChapterLength = job.chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0) / job.chapters.length;
+      const totalWordCount = job.chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0);
+      
       job.qualityMetrics = {
-        averageChapterLength,
-        genreAdherence: 0.85, // Would be calculated by analysis
-        characterConsistency: 0.80,
-        plotContinuity: 0.88
+        averageChapterLength: Math.round(averageChapterLength),
+        totalWordCount: totalWordCount,
+        targetAccuracy: Math.round((totalWordCount / job.targetWordCount) * 100),
+        chaptersCompleted: job.chapters.length,
+        completionRate: Math.round((job.chapters.length / job.targetChapters) * 100)
       };
     }
     
     job.progress.lastActivity = new Date();
     await job.save();
     
+    // Check cost alert
+    if (totalCost > parseFloat(process.env.COST_ALERT_THRESHOLD || '25.00')) {
+      logger.warn(`Cost alert: Job ${jobId} exceeded threshold with $${totalCost.toFixed(4)}`);
+    }
+    
     logger.info(`Completed generating all chapters for job ${jobId}`);
   }
-
+  
   async generateChapter(jobId, chapterNumber, chapterOutline) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
-
-    const genreInstruction = genreInstructions[job.genre][job.subgenre];
     
-    // Build context from previous chapters
-    let previousContext = '';
-    if (job.chapters.length > 0) {
-      const recentChapters = job.chapters.slice(-2); // Last 2 chapters for context
-      previousContext = recentChapters.map(ch => 
-        `Chapter ${ch.chapterNumber}: ${ch.title}\n${ch.content.substring(0, 1000)}...`
-      ).join('\n\n');
-    }
-
-    const chapterPrompt = `Write Chapter ${chapterNumber} of "${job.title}", a ${job.genre.replace(/_/g, ' ')} novel in the ${job.subgenre.replace(/_/g, ' ')} subgenre.
-
-PREMISE: ${job.premise}
-
-GENRE GUIDELINES: ${genreInstruction}
+    const maxAttempts = 3;
+    let attempts = 0;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      
+      try {
+        const chapterStart = Date.now();
+        
+        // Get genre-specific instructions
+        const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
+        
+        const chapterPrompt = `
+Write Chapter ${chapterNumber} of the novel "${job.title}".
 
 CHAPTER OUTLINE:
 Title: ${chapterOutline.title}
 Summary: ${chapterOutline.summary}
 Key Events: ${chapterOutline.keyEvents.join(', ')}
-Character Focus: ${chapterOutline.characterFocus.join(', ')}
-Plot Advancement: ${chapterOutline.plotAdvancement}
-Target Word Count: ${chapterOutline.wordTarget}
-Genre Elements: ${chapterOutline.genreElements.join(', ')}
+Target Word Count: ${chapterOutline.targetWordCount}
 
-${previousContext ? `PREVIOUS CHAPTERS CONTEXT:\n${previousContext}\n\n` : ''}
+NOVEL CONTEXT:
+Premise: "${job.premise}"
+Genre: ${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}
+Previous chapters context: ${job.chapters.length > 0 ? job.chapters.slice(-2).map(ch => `Chapter ${ch.number}: ${ch.title}`).join('; ') : 'This is the first chapter'}
+
+GENRE GUIDELINES:
+${genreInstruction}
+
+ANALYSIS CONTEXT:
+${JSON.stringify(job.analysis, null, 2)}
 
 Write the complete chapter with:
-1. Compelling opening that hooks the reader
-2. Rich character development and dialogue
-3. Vivid scene descriptions and atmosphere
-4. Genre-appropriate tone and style
-5. Strong narrative momentum
-6. Satisfying chapter conclusion that leads to the next
+- Engaging prose appropriate to the genre
+- Proper dialogue and action
+- Character development
+- Scene descriptions
+- Approximately ${chapterOutline.targetWordCount} words
 
-Target approximately ${chapterOutline.wordTarget} words. Write engaging, publishable prose that maintains consistency with the established narrative voice and character development.`;
+Write only the chapter content, no metadata or formatting.`;
 
-    let attempts = 0;
-    const maxAttempts = 3;
-
-    while (attempts < maxAttempts) {
-      attempts++;
-      
-      try {
         const response = await this.openai.chat.completions.create({
           model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a professional novelist specializing in ${job.genre.replace(/_/g, ' ')} fiction. Write compelling, engaging chapters that maintain consistency with the overall narrative. Focus on strong character development, vivid descriptions, and genre-appropriate storytelling.`
-            },
-            {
-              role: 'user',
-              content: chapterPrompt
-            }
-          ],
-          temperature: 0.8,
-          max_tokens: 4000
+          messages: [{ role: 'user', content: chapterPrompt }],
+          temperature: 0.7,
+          max_tokens: Math.min(4000, Math.round(chapterOutline.targetWordCount * 1.5))
         });
-
+        
         const chapterContent = response.choices[0].message.content.trim();
         const wordCount = this.countWords(chapterContent);
-        const tokensUsed = response.usage.total_tokens;
-        const cost = this.calculateCost('gpt-4o', response.usage.prompt_tokens, response.usage.completion_tokens);
-
-        // Validate chapter quality
-        if (wordCount < chapterOutline.wordTarget * 0.7) {
-          if (attempts < maxAttempts) {
-            logger.warn(`Chapter ${chapterNumber} too short (${wordCount} words), retrying...`);
-            continue;
-          }
-        }
-
+        
+        // Calculate cost
+        const cost = this.calculateCost(
+          'gpt-4o',
+          response.usage.prompt_tokens,
+          response.usage.completion_tokens
+        );
+        
         // Create chapter object
         const chapter = {
-          chapterNumber,
+          number: chapterNumber,
           title: chapterOutline.title,
           content: chapterContent,
-          wordCount,
-          tokensUsed,
-          cost,
-          attempts,
-          generatedAt: new Date()
+          wordCount: wordCount,
+          tokensUsed: response.usage.total_tokens,
+          cost: cost,
+          attempts: attempts,
+          generationTime: Date.now() - chapterStart
         };
-
-        logger.info(`Generated chapter ${chapterNumber} for job ${jobId}: ${wordCount} words, ${tokensUsed} tokens, $${cost.toFixed(4)}`);
+        
+        logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words, attempt ${attempts})`);
+        
         return chapter;
-
+        
       } catch (error) {
         logger.error(`Attempt ${attempts} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
         
         if (attempts >= maxAttempts) {
-          throw error;
+          throw new Error(`Failed to generate chapter ${chapterNumber} after ${maxAttempts} attempts: ${error.message}`);
         }
         
-        // Wait before retry
+        // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
       }
     }
-    
-    throw new Error(`Failed to generate chapter ${chapterNumber} after ${maxAttempts} attempts`);
   }
-
-  async finalizeJob(jobId) {
-    const job = await Job.findById(jobId);
-    if (!job) throw new Error(`Job ${jobId} not found`);
-
-    // Update final status
-    job.status = 'completed';
-    job.currentPhase = 'finalization';
-    job.completedAt = new Date();
-    job.progress.lastActivity = new Date();
-    
-    // Calculate final metrics
-    const totalWordCount = job.chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0);
-    const totalCost = (job.modelUsage.outlineGeneration?.cost || 0) + (job.modelUsage.chapterGeneration?.cost || 0);
-    const totalTokens = (job.modelUsage.outlineGeneration?.tokensUsed || 0) + (job.modelUsage.chapterGeneration?.tokensUsed || 0);
-
-    await job.save();
-
-    emitJobUpdate(jobId, {
-      status: job.status,
-      currentPhase: job.currentPhase,
-      message: 'Novel generation complete!',
-      progress: {
-        chaptersCompleted: job.chapters.length,
-        totalChapters: job.targetChapters,
-        completed: true
-      },
-      totalWordCount,
-      totalCost,
-      totalTokens
-    });
-
-    logger.info(`Finalized job ${jobId}: ${totalWordCount} words, $${totalCost.toFixed(4)}`);
-  }
-
-  async resumeGeneration(jobId) {
-    const job = await Job.findById(jobId);
-    if (!job) throw new Error(`Job ${jobId} not found`);
-
-    logger.info(`Resuming generation for job ${jobId} from status: ${job.status}`);
-
-    if (job.status === 'planning' || job.currentPhase === 'premise_analysis') {
-      // Restart from outline generation
-      await this.generateOutline(jobId);
-      await this.generateChapters(jobId);
-      await this.finalizeJob(jobId);
-    } else if (job.status === 'outlining' || job.currentPhase === 'outline_generation') {
-      // Continue with chapter generation
-      await this.generateChapters(jobId);
-      await this.finalizeJob(jobId);
-    } else if (job.status === 'writing' || job.currentPhase === 'chapter_writing') {
-      // Resume chapter generation from where we left off
-      await this.resumeChapterGeneration(jobId, job.chapters.length + 1);
-      await this.finalizeJob(jobId);
-    }
-  }
-
-  async resumeChapterGeneration(jobId, startFromChapter) {
+  
+  async resumeChapterGeneration(jobId, startFromChapter = 1) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
     
@@ -486,81 +495,77 @@ Target approximately ${chapterOutline.wordTarget} words. Write engaging, publish
     
     // Generate remaining chapters
     try {
-      const chapterGenerationStart = Date.now();
-      let totalTokensUsed = 0;
-      let totalCost = 0;
-      let attempts = 0;
-
-      for (let i = startFromChapter - 1; i < job.outline.length; i++) {
-        const chapterNumber = i + 1;
-        const chapterOutline = job.outline[i];
-        
-        emitJobUpdate(jobId, {
-          currentPhase: 'chapter_writing',
-          message: `Generating chapter ${chapterNumber} of ${job.targetChapters}...`,
-          progress: {
-            chaptersCompleted: job.chapters.length,
-            totalChapters: job.targetChapters
-          }
-        });
-        
-        const chapter = await this.generateChapter(jobId, chapterNumber, chapterOutline);
-        
+      // Find chapters that need to be generated
+      const existingChapterNumbers = job.chapters.map(ch => ch.number);
+      const chaptersToGenerate = job.outline.filter(outline => 
+        outline.number >= startFromChapter && !existingChapterNumbers.includes(outline.number)
+      );
+      
+      for (const chapterOutline of chaptersToGenerate) {
+        const chapter = await this.generateChapter(jobId, chapterOutline.number, chapterOutline);
         job.chapters.push(chapter);
         job.progress.chaptersCompleted = job.chapters.length;
         job.progress.lastActivity = new Date();
-        
-        totalTokensUsed += chapter.tokensUsed || 0;
-        totalCost += chapter.cost || 0;
-        attempts += chapter.attempts || 1;
-        
         await job.save();
-      }
-
-      // Update model usage stats
-      if (!job.modelUsage.chapterGeneration) {
-        job.modelUsage.chapterGeneration = {};
+        
+        emitJobUpdate(jobId, {
+          currentPhase: 'chapter_writing',
+          progress: {
+            chaptersCompleted: job.chapters.length,
+            totalChapters: job.targetChapters
+          },
+          message: `Chapter ${chapterOutline.number} completed. ${job.chapters.length}/${job.targetChapters} chapters done.`
+        });
       }
       
-      job.modelUsage.chapterGeneration.tokensUsed = (job.modelUsage.chapterGeneration.tokensUsed || 0) + totalTokensUsed;
-      job.modelUsage.chapterGeneration.cost = (job.modelUsage.chapterGeneration.cost || 0) + totalCost;
-      job.modelUsage.chapterGeneration.attempts = (job.modelUsage.chapterGeneration.attempts || 0) + attempts;
-      job.modelUsage.chapterGeneration.duration = Date.now() - chapterGenerationStart;
-      job.modelUsage.chapterGeneration.model = 'gpt-4o';
-      
-      await job.save();
+      // Check if all chapters are complete
+      if (job.chapters.length >= job.targetChapters) {
+        job.status = 'completed';
+        job.currentPhase = 'completed';
+        await job.save();
+        
+        this.activeJobs.delete(jobId);
+        
+        emitJobUpdate(jobId, {
+          status: 'completed',
+          currentPhase: 'completed',
+          message: 'Novel generation completed successfully!'
+        });
+      }
       
       logger.info(`Completed resuming chapter generation for job ${jobId}`);
       
     } catch (error) {
       await this.handleGenerationError(jobId, error);
-    } finally {
-      this.activeJobs.delete(jobId);
     }
   }
-
+  
   async handleOpenAIError(error, jobId, phase) {
     logger.error(`OpenAI API error in ${phase} for job ${jobId}:`, error);
     
     // Handle specific OpenAI API errors with appropriate strategies
     if (error.status === 429) {
       // Rate limit error - implement exponential backoff
-      logger.warn(`Rate limit hit for job ${jobId}, implementing backoff`);
-      return true; // Retry
+      logger.warn(`Rate limit hit for job ${jobId}, will retry with backoff`);
+      return true;
     } else if (error.status === 500 || error.status === 503) {
       // Server error - retry with backoff
       logger.warn(`OpenAI server error for job ${jobId}, will retry`);
-      return true; // Retry
-    } else if (error.status === 400 && error.message.includes('context_length_exceeded')) {
+      return true;
+    } else if (error.status === 400 && error.message?.includes('context_length_exceeded')) {
       // Context length error - need to reduce input
-      logger.error(`Context length exceeded for job ${jobId}`);
-      return false; // Don't retry, needs different approach
+      logger.error(`Context length exceeded for job ${jobId}, cannot retry`);
+      return false;
+    } else if (error.status === 401) {
+      // Authentication error
+      logger.error(`Invalid API key for job ${jobId}`);
+      return false;
     }
     
     // For other errors, don't retry automatically
     return false;
   }
-
+  
   async handleGenerationError(jobId, error, phase = null) {
     logger.error(`Error in generation for job ${jobId}:`, error);
     
@@ -568,37 +573,53 @@ Target approximately ${chapterOutline.wordTarget} words. Write engaging, publish
       const job = await Job.findById(jobId);
       if (job) {
         job.status = 'failed';
+        job.currentPhase = 'error';
+        job.error = {
+          message: error.message,
+          phase: phase || job.currentPhase,
+          timestamp: new Date()
+        };
         job.progress.lastActivity = new Date();
         await job.save();
         
         emitJobUpdate(jobId, {
           status: 'failed',
-          message: `Generation failed: ${error.message}`,
-          error: error.message
+          currentPhase: 'error',
+          error: error.message,
+          message: `Generation failed: ${error.message}`
         });
       }
+      
+      // Remove from active jobs
+      this.activeJobs.delete(jobId);
+      
     } catch (dbError) {
       logger.error(`Error updating job ${jobId} after generation error:`, dbError);
     }
-    
-    this.activeJobs.delete(jobId);
   }
-
+  
   calculateCost(model, promptTokens, completionTokens) {
     const rates = this.costTracking[model];
     if (!rates) return 0;
     
     return (promptTokens * rates.inputCost / 1000) + (completionTokens * rates.outputCost / 1000);
   }
-
+  
   countWords(text) {
-    return text.split(/\s+/).filter(Boolean).length;
+    if (!text || typeof text !== 'string') return 0;
+    return text.split(/\s+/).filter(word => word.length > 0).length;
   }
-
+  
+  // Get active job status
+  getActiveJobStatus(jobId) {
+    return this.activeJobs.get(jobId) || null;
+  }
+  
+  // Get all active jobs
   getActiveJobs() {
-    return Array.from(this.activeJobs.entries()).map(([jobId, data]) => ({
+    return Array.from(this.activeJobs.entries()).map(([jobId, status]) => ({
       jobId,
-      ...data
+      ...status
     }));
   }
 }

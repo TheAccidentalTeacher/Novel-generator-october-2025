@@ -1,6 +1,9 @@
+import { useSanitizer, SafeText } from '../../utils/sanitizer';
 import '../../styles/ChapterViewer.css';
 
 function ChapterViewer({ chapter }) {
+  const { sanitizeNovelContent, escapeText } = useSanitizer();
+
   if (!chapter) {
     return (
       <div className="chapter-viewer empty">
@@ -9,10 +12,15 @@ function ChapterViewer({ chapter }) {
     );
   }
 
-  // Format the chapter content with proper paragraphs
+  // Sanitize and format chapter content with XSS protection
   const formatContent = (content) => {
-    return content.split('\n\n').map((paragraph, index) => (
-      <p key={index}>{paragraph}</p>
+    const sanitizedParagraphs = sanitizeNovelContent(content);
+    
+    return sanitizedParagraphs.map((paragraph) => (
+      <p 
+        key={paragraph.id}
+        dangerouslySetInnerHTML={{ __html: paragraph.sanitized }}
+      />
     ));
   };
 
@@ -20,11 +28,11 @@ function ChapterViewer({ chapter }) {
     <div className="chapter-viewer">
       <div className="chapter-header">
         <h2>
-          <span className="chapter-number">Chapter {chapter.number}:</span>
-          <span className="chapter-title">{chapter.title}</span>
+          <span className="chapter-number">Chapter {parseInt(chapter.number)}:</span>
+          <SafeText className="chapter-title">{chapter.title}</SafeText>
         </h2>
         <div className="chapter-meta">
-          <span>{chapter.wordCount} words</span>
+          <span>{parseInt(chapter.wordCount || 0).toLocaleString()} words</span>
         </div>
       </div>
       <div className="chapter-content">
