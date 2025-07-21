@@ -1,5 +1,12 @@
 // app.js - Production-ready Express application with comprehensive security
+console.log('🚀 Starting Let\'s Write a Book backend...');
+console.log('📁 Working directory:', __dirname);
+console.log('🕐 Startup time:', new Date().toISOString());
+
 require('dotenv').config();
+
+// Load logger first so it can be used in validation
+const logger = require('./logger');
 
 // Environment validation at startup
 function validateEnvironment() {
@@ -25,6 +32,16 @@ function validateEnvironment() {
     process.exit(1);
   }
   
+  // Log environment status
+  console.log('✅ Environment validation passed');
+  console.log('📊 Environment variables status:', {
+    NODE_ENV: process.env.NODE_ENV,
+    PORT: process.env.PORT || 'not set (will use 3000)',
+    MONGODB_URI: process.env.MONGODB_URI ? '✅ Set' : '❌ Missing',
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY ? '✅ Set' : '❌ Missing',
+    MAX_CONCURRENT_JOBS: process.env.MAX_CONCURRENT_JOBS || 'not set (will use default)'
+  });
+  
   // Log configuration status
   logger.info('✅ Environment validation passed');
   logger.info(`📍 Running in ${process.env.NODE_ENV} mode`);
@@ -36,15 +53,17 @@ function validateEnvironment() {
     }
   });
   
-  // Validate OpenAI API key format
-  if (!process.env.OPENAI_API_KEY.startsWith('sk-')) {
+  // Validate OpenAI API key format (skip for test environment)
+  if (process.env.NODE_ENV !== 'test' && !process.env.OPENAI_API_KEY.startsWith('sk-')) {
     console.error('❌ Invalid OpenAI API key format');
+    logger.error('Invalid OpenAI API key format');
     process.exit(1);
   }
   
-  // Validate MongoDB URI format
-  if (!process.env.MONGODB_URI.startsWith('mongodb')) {
+  // Validate MongoDB URI format (flexible for test environment)
+  if (process.env.NODE_ENV !== 'test' && !process.env.MONGODB_URI.startsWith('mongodb')) {
     console.error('❌ Invalid MongoDB URI format');
+    logger.error('Invalid MongoDB URI format');
     process.exit(1);
   }
 }
@@ -60,9 +79,8 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const http = require('http');
 const path = require('path');
-const connectDB = require('./mongodb');
+const { connectDB } = require('./mongodb');
 const { initializeWebSocket, gracefulShutdown: shutdownWebSocket } = require('./websocket');
-const logger = require('./logger');
 const novelRoutes = require('./routes/novel');
 const healthRoutes = require('./routes/health');
 const recoveryService = require('./services/recoveryService');
@@ -77,15 +95,20 @@ const server = http.createServer(app);
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// Connect to MongoDB with error handling
+// Connect to MongoDB with error handling (skip for test environment)
 let mongoConnection = null;
-connectDB().then(() => {
+if (process.env.NODE_ENV !== 'test') {
+  connectDB().then(() => {
+    mongoConnection = true;
+    logger.info('MongoDB connection established');
+  }).catch(error => {
+    logger.error('Failed to connect to MongoDB:', error);
+    process.exit(1);
+  });
+} else {
+  logger.info('Skipping MongoDB connection in test environment');
   mongoConnection = true;
-  logger.info('MongoDB connection established');
-}).catch(error => {
-  logger.error('Failed to connect to MongoDB:', error);
-  process.exit(1);
-});
+}
 
 // Initialize WebSocket with error handling
 try {
@@ -470,8 +493,20 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
+console.log('🎯 Attempting to start server on port:', PORT);
 
-server.listen(PORT, () => {
+server.listen(PORT, (err) => {
+  if (err) {
+    console.error('❌ FAILED TO START SERVER:', err);
+    logger.error('Failed to start server:', err);
+    process.exit(1);
+  }
+  
+  console.log('🎉 SERVER SUCCESSFULLY STARTED!');
+  console.log(`🌐 Server running on port ${PORT}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+  console.log(`🔍 Health check available at: http://localhost:${PORT}/health`);
+  console.log(`🕐 Server started at: ${new Date().toISOString()}`);
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV}`);
   logger.info(`🔒 Security headers enabled`);
@@ -483,6 +518,30 @@ server.listen(PORT, () => {
   } catch (error) {
     logger.error('Failed to start recovery service:', error);
   }
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('❌ SERVER ERROR:', error);
+  logger.error('Server error:', error);
+  
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use`);
+    logger.error(`Port ${PORT} is already in use`);
+  }
+  
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('📴 SIGTERM received, shutting down gracefully');
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('🔒 Server closed');
+    logger.info('Server closed');
+    process.exit(0);
+  });
 });
 
 // Export for testing

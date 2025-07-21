@@ -1,21 +1,26 @@
 {
-  "name": "somers-novel-generator",
+  "name": "letswriteabook",
   "version": "1.0.0",
   "description": "AI-powered novel generator deployed on Railway",
-  "main": "backend/app.js",
   "scripts": {
-    "start": "node backend/app.js",
-    "build": "npm run build:frontend && npm run copy:frontend",
-    "build:frontend": "cd frontend && npm install && npm run build",
-    "copy:frontend": "node scripts/copy-frontend.js",
-    "install": "npm run install:all",
-    "install:all": "npm run install:backend && npm run install:frontend",
-    "install:backend": "cd backend && npm install",
-    "install:frontend": "cd frontend && npm install",
-    "postinstall": "npm run install:all"
+    "test": "node test-local.js",
+    "test:local": "node test-local.js",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm install && npm run build && cd .. && node scripts/copy-frontend.js",
+    "start:local": "cd backend && npm install && node app.js",
+    "deploy:test": "npm run test && echo 'Local tests passed! Ready for deployment'",
+    "railway:deploy": "npm run deploy:test && railway up",
+    "postinstall": "echo 'Root dependencies installed'"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   },
   "dependencies": {
     "fs-extra": "^11.2.0"

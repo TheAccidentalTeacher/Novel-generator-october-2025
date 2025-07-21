@@ -27,7 +27,6 @@ class DatabaseManager {
       readPreference: 'primary',
       compressors: ['zlib'],
       heartbeatFrequencyMS: 10000, // 10 seconds
-      serverSelectionRetryDelayMS: 2000, // 2 seconds
     };
     
     // Bind event handlers

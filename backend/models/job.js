@@ -83,7 +83,7 @@ const jobSchema = new mongoose.Schema({
   // Story data
   premise: { 
     type: String, 
-    maxLength: 10000,
+    maxLength: 30000, // ~5,000 words
     required: true
   },
   title: {

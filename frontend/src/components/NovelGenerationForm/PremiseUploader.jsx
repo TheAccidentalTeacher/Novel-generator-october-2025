@@ -68,12 +68,12 @@ function PremiseUploader({ premise, onChange, onFileUpload }) {
           style={{ display: 'none' }}
         />
         <p>Drag & drop a text file or <button type="button" onClick={handleBrowseClick}>browse</button></p>
-        <p className="file-types">Accepted file types: .txt, .md (max 10,000 characters)</p>
+        <p className="file-types">Accepted file types: .txt, .md (max 5,000 words)</p>
       </div>
       
       <div className="form-group">
         <label htmlFor="premise">
-          Premise <span className="char-count">{charCount}/10000</span>
+          Premise <span className="char-count">{charCount}/30000</span>
         </label>
         <textarea
           id="premise"
@@ -81,7 +81,7 @@ function PremiseUploader({ premise, onChange, onFileUpload }) {
           onChange={handleTextChange}
           placeholder="Enter your novel premise here or upload a file..."
           required
-          maxLength="10000"
+          maxLength="30000"
         ></textarea>
       </div>
     </div>

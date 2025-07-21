@@ -77,8 +77,8 @@ const validateNovelGeneration = [
     .withMessage('Title contains invalid characters'),
     
   body('premise')
-    .isLength({ min: 50, max: 10000 })
-    .withMessage('Premise must be 50-10,000 characters')
+    .isLength({ min: 50, max: 30000 })
+    .withMessage('Premise must be 50-30,000 characters (approximately 5,000 words)')
     .trim(),
     
   body('genre')
@@ -294,10 +294,10 @@ router.post('/upload-premise',
         });
       }
       
-      if (fileContent.length > 10000) {
+      if (fileContent.length > 30000) {
         return res.status(400).json({ 
           error: 'File content too long',
-          message: 'Premise must be less than 10,000 characters'
+          message: 'Premise must be less than 30,000 characters (approximately 5,000 words)'
         });
       }
       

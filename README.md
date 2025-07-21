@@ -1,4 +1,4 @@
-<h1 align="center">Somers Novel Generator</h1>
+<h1 align="center">Let's Write a Book - AI Novel Generator</h1>
 
 <p align="center"><em>AI-powered novel generator deployed entirely on Railway for maximum simplicity and reliability.</em></p>
 
@@ -23,7 +23,7 @@
 
 ## Overview
 
-The **Somers Novel Generator** is a full-stack application deployed entirely on **Railway** that leverages OpenAI models to generate complete novels. This simplified deployment approach eliminates CORS issues, reduces complexity, and provides a single URL for both frontend and backend. The system features real-time progress updates, robust error handling, and cost optimization.
+**Let's Write a Book** is a full-stack application deployed entirely on **Railway** that leverages OpenAI models to generate complete novels. This simplified deployment approach eliminates CORS issues, reduces complexity, and provides a single URL for both frontend and backend. The system features real-time progress updates, robust error handling, and cost optimization.
 
 ---
 
@@ -44,7 +44,7 @@ The **Somers Novel Generator** is a full-stack application deployed entirely on 
 ## Project Structure
 
 ```
-somers-novel-generator/
+letswriteabook/
 ├── backend/                # Node.js/Express backend + static frontend
 │   ├── app.js             # Main server file
 │   ├── models/            # MongoDB models
@@ -81,8 +81,8 @@ somers-novel-generator/
 
 1. **Fork or clone this repository:**
    ```bash
-   git clone https://github.com/yourusername/somers-novel-generator.git
-   cd somers-novel-generator
+   git clone https://github.com/yourusername/letswriteabook.git
+   cd letswriteabook
    ```
 
 2. **Set up MongoDB Atlas:**
@@ -111,7 +111,7 @@ Create these environment variables in Railway's dashboard:
 OPENAI_API_KEY=your-openai-api-key-here
 
 # Database Configuration  
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/somers-novels
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/letswriteabook
 
 # Railway Configuration
 NODE_ENV=production
@@ -396,7 +396,7 @@ Create `package.json` in the project root:
 
 ```json
 {
-  "name": "somers-novel-generator",
+  "name": "letswriteabook",
   "version": "1.0.0",
   "description": "AI-powered novel generator deployed on Railway",
   "main": "backend/app.js",
@@ -533,7 +533,7 @@ export default defineConfig({
    - Click "Build a Database"
    - Choose "M0 Sandbox" (free tier)
    - Select your preferred cloud provider and region
-   - Name your cluster (e.g., "somers-novels")
+   - Name your cluster (e.g., "letswriteabook")
    - Click "Create Cluster"
 
 3. **Configure Database Access:**
@@ -558,7 +558,7 @@ export default defineConfig({
 
 Example connection string:
 ```
-mongodb+srv://myuser:mypassword@cluster0.xyz.mongodb.net/somers-novels?retryWrites=true&w=majority
+mongodb+srv://myuser:mypassword@cluster0.xyz.mongodb.net/letswriteabook?retryWrites=true&w=majority
 ```
 
 ---
@@ -599,8 +599,8 @@ SOFTWARE.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/somers-novel-generator.git
-   cd somers-novel-generator
+   git clone https://github.com/yourusername/letswriteabook.git
+   cd letswriteabook
    ```
 
 2. **Install dependencies:**
@@ -657,7 +657,7 @@ The application follows a unified deployment architecture:
 code
 
 
-somers-novel-generator/
+letswriteabook/
 ├── backend/
 │   ├── app.js                  # Main Express application
 │   ├── mongodb.js              # MongoDB connection
@@ -719,7 +719,7 @@ json
 
 
 {
-  "name": "somers-novel-generator-backend",
+  "name": "letswriteabook-backend",
   "version": "1.0.0",
   "description": "AI-powered novel generation backend",
   "main": "app.js",
@@ -754,7 +754,7 @@ json
 
 
 {
-  "name": "somers-novel-generator-frontend",
+  "name": "letswriteabook-frontend",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -3462,7 +3462,7 @@ Part 8: Railway Deployment Instructions
 
 **Connection String Format:**
 ```
-mongodb+srv://username:password@cluster.mongodb.net/somers-novels?retryWrites=true&w=majority
+mongodb+srv://username:password@cluster.mongodb.net/letswriteabook?retryWrites=true&w=majority
 ```
 
 8.2 Deploying to Railway
@@ -3475,7 +3475,7 @@ mongodb+srv://username:password@cluster.mongodb.net/somers-novels?retryWrites=tr
 
 1. **Connect Repository:**
    - Click "New Project" → "Deploy from GitHub repo"
-   - Select your `somers-novel-generator` repository
+   - Select your `letswriteabook` repository
    - Choose the main branch
 
 2. **Configure Environment Variables:**

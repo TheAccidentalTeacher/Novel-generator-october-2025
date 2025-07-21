@@ -1,7 +1,7 @@
 {
-  "name": "somers-frontend",
+  "name": "letswriteabook-frontend",
   "version": "1.0.0",
-  "description": "Frontend for Somers Novel Generator",
+  "description": "Frontend for Let's Write a Book",
   "type": "module",
   "scripts": {
     "dev": "vite",
