@@ -21,24 +21,32 @@ export function useWebSocket(jobId) {
       });
       
       socket.current.on('connect', () => {
-        console.log('WebSocket connected');
+        // WebSocket connected - production ready
         setIsConnected(true);
         reconnectAttempts.current = 0;
         socket.current.emit('subscribe', jobId);
       });
       
       socket.current.on('connect_error', (error) => {
-        console.error('WebSocket connection error:', error);
+        // Log to browser console for debugging only
+        if (process.env.NODE_ENV === 'development') {
+          console.error('WebSocket connection error:', error);
+        }
         setIsConnected(false);
         
         reconnectAttempts.current++;
         if (reconnectAttempts.current >= maxReconnectAttempts) {
-          console.error('Max reconnection attempts reached');
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Max reconnection attempts reached');
+          }
         }
       });
       
       socket.current.on('disconnect', (reason) => {
-        console.log('WebSocket disconnected:', reason);
+        // Log to browser console for debugging only
+        if (process.env.NODE_ENV === 'development') {
+          console.log('WebSocket disconnected:', reason);
+        }
         setIsConnected(false);
         
         if (reason === 'io server disconnect') {
@@ -49,7 +57,7 @@ export function useWebSocket(jobId) {
       
       // Handle job updates
       socket.current.on('job-update', (data) => {
-        console.log('Received job update:', data);
+        // Process job updates without console logging in production
         dispatch({ type: 'UPDATE_PROGRESS', payload: data });
         
         if (data.status === 'completed') {

@@ -26,13 +26,13 @@ function validateEnvironment() {
   }
   
   // Log configuration status
-  console.log('✅ Environment validation passed');
-  console.log(`📍 Running in ${process.env.NODE_ENV} mode`);
+  logger.info('✅ Environment validation passed');
+  logger.info(`📍 Running in ${process.env.NODE_ENV} mode`);
   
   // Validate optional vars and set defaults
   optionalVars.forEach(varName => {
     if (!process.env[varName]) {
-      console.log(`⚠️  Optional environment variable ${varName} not set`);
+      logger.warn(`⚠️  Optional environment variable ${varName} not set`);
     }
   });
   

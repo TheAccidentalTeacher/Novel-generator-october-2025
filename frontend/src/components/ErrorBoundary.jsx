@@ -1,6 +1,6 @@
 // ErrorBoundary.jsx - Production-ready React error boundary with comprehensive error handling
 import React from 'react';
-import PropTypes from 'prop-types';
+import './ErrorBoundary.css';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -185,14 +185,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-ErrorBoundary.propTypes = {
-  children: PropTypes.node.isRequired,
-  fallback: PropTypes.func,
-  level: PropTypes.oneOf(['app', 'page', 'component']),
-  userId: PropTypes.string,
-  onError: PropTypes.func
-};
-
+// Default props without PropTypes
 ErrorBoundary.defaultProps = {
   level: 'app'
 };

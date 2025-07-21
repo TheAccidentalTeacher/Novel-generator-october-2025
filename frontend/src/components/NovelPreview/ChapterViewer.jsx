@@ -1,4 +1,4 @@
-import { useSanitizer, SafeText } from '../../utils/sanitizer';
+import { useSanitizer, SafeText } from '../../utils/sanitizer.jsx';
 import '../../styles/ChapterViewer.css';
 
 function ChapterViewer({ chapter }) {
