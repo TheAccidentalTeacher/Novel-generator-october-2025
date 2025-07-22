@@ -81,16 +81,9 @@ class RequestLimiter {
           limit: config.max,
           windowMs: config.windowMs
         });
-      },
-      
-      onLimitReached: (req, res) => {
-        logger.warn('Rate limit reached', {
-          ip: req.ip,
-          path: req.path,
-          method: req.method,
-          userAgent: req.get('User-Agent')
-        });
       }
+      // Note: onLimitReached is deprecated in express-rate-limit v7
+      // Rate limiting events are now handled in the handler function above
     });
   }
 
@@ -109,15 +102,8 @@ class RequestLimiter {
 
     return slowDown({
       ...defaultOptions,
-      ...options,
-      onLimitReached: (req, res) => {
-        logger.warn('Slow down limit reached', {
-          ip: req.ip,
-          path: req.path,
-          method: req.method,
-          userAgent: req.get('User-Agent')
-        });
-      }
+      ...options
+      // Note: onLimitReached is deprecated - slowDown middleware handles delays differently
     });
   }
 

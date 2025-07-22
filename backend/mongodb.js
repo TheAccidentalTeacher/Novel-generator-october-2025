@@ -13,8 +13,7 @@ class DatabaseManager {
     
     // Connection configuration
     this.connectionOptions = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      // Removed deprecated options: useNewUrlParser and useUnifiedTopology (no longer needed in Node.js Driver v4+)
       serverSelectionTimeoutMS: parseInt(process.env.DB_SERVER_SELECTION_TIMEOUT) || 30000, // 30 seconds
       socketTimeoutMS: parseInt(process.env.DB_SOCKET_TIMEOUT) || 60000, // 60 seconds
       connectTimeoutMS: parseInt(process.env.DB_CONNECT_TIMEOUT) || 30000, // 30 seconds
