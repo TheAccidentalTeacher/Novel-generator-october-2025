@@ -1,7 +1,10 @@
 // app.js - Production-ready Express application with comprehensive security
-console.log('🚀 Starting Let\'s Write a Book backend...');
-console.log('📁 Working directory:', __dirname);
-console.log('🕐 Startup time:', new Date().toISOString());
+// Startup logging - only in development
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🚀 Starting Let\'s Write a Book backend...');
+  console.log('📁 Working directory:', __dirname);
+  console.log('🕐 Startup time:', new Date().toISOString());
+}
 
 require('dotenv').config();
 
@@ -27,20 +30,25 @@ function validateEnvironment() {
   const missing = requiredVars.filter(varName => !process.env[varName]);
   
   if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:', missing.join(', '));
-    console.error('Please ensure all required environment variables are set before starting the application.');
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('❌ Missing required environment variables:', missing.join(', '));
+      console.error('Please ensure all required environment variables are set before starting the application.');
+    }
+    logger.error('Missing required environment variables', { missing });
     process.exit(1);
   }
   
-  // Log environment status
-  console.log('✅ Environment validation passed');
-  console.log('📊 Environment variables status:', {
-    NODE_ENV: process.env.NODE_ENV,
-    PORT: process.env.PORT || 'not set (will use 3000)',
-    MONGODB_URI: process.env.MONGODB_URI ? '✅ Set' : '❌ Missing',
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY ? '✅ Set' : '❌ Missing',
-    MAX_CONCURRENT_JOBS: process.env.MAX_CONCURRENT_JOBS || 'not set (will use default)'
-  });
+  // Log environment status - only in development
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('✅ Environment validation passed');
+    console.log('📊 Environment variables status:', {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT || 'not set (will use 3000)',
+      MONGODB_URI: process.env.MONGODB_URI ? '✅ Set' : '❌ Missing',
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY ? '✅ Set' : '❌ Missing',
+      MAX_CONCURRENT_JOBS: process.env.MAX_CONCURRENT_JOBS || 'not set (will use default)'
+    });
+  }
   
   // Log configuration status
   logger.info('✅ Environment validation passed');
@@ -55,14 +63,18 @@ function validateEnvironment() {
   
   // Validate OpenAI API key format (skip for test environment)
   if (process.env.NODE_ENV !== 'test' && !process.env.OPENAI_API_KEY.startsWith('sk-')) {
-    console.error('❌ Invalid OpenAI API key format');
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('❌ Invalid OpenAI API key format');
+    }
     logger.error('Invalid OpenAI API key format');
     process.exit(1);
   }
   
   // Validate MongoDB URI format (flexible for test environment)
   if (process.env.NODE_ENV !== 'test' && !process.env.MONGODB_URI.startsWith('mongodb')) {
-    console.error('❌ Invalid MongoDB URI format');
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('❌ Invalid MongoDB URI format');
+    }
     logger.error('Invalid MongoDB URI format');
     process.exit(1);
   }
@@ -101,14 +113,20 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 // Connect to MongoDB with error handling (skip for test environment)
 let mongoConnection = null;
 if (process.env.NODE_ENV !== 'test') {
-  console.log('📊 Connecting to MongoDB...');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('📊 Connecting to MongoDB...');
+  }
   connectDB().then(() => {
     mongoConnection = true;
     logger.info('MongoDB connection established');
-    console.log('✅ MongoDB connected successfully');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✅ MongoDB connected successfully');
+    }
   }).catch(error => {
     logger.error('Failed to connect to MongoDB:', error);
-    console.error('❌ MongoDB connection failed:', error.message);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('❌ MongoDB connection failed:', error.message);
+    }
     // Don't exit - let server start anyway
     mongoConnection = false;
   });
@@ -500,21 +518,27 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-console.log('🎯 Attempting to start server on port:', PORT);
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🎯 Attempting to start server on port:', PORT);
+}
 
 server.listen(PORT, (err) => {
   if (err) {
-    console.error('❌ FAILED TO START SERVER:', err);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('❌ FAILED TO START SERVER:', err);
+    }
     logger.error('Failed to start server:', err);
     process.exit(1);
   }
   
-  console.log('🎉 SERVER SUCCESSFULLY STARTED!');
-  console.log(`🌐 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🔍 Health check available at: http://localhost:${PORT}/health`);
-  console.log(`🕐 Server started at: ${new Date().toISOString()}`);
-  console.log(`🗄️  MongoDB status: ${mongoConnection ? 'Connected' : 'Disconnected'}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🎉 SERVER SUCCESSFULLY STARTED!');
+    console.log(`🌐 Server running on port ${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🔍 Health check available at: http://localhost:${PORT}/health`);
+    console.log(`🕐 Server started at: ${new Date().toISOString()}`);
+    console.log(`🗄️  MongoDB status: ${mongoConnection ? 'Connected' : 'Disconnected'}`);
+  }
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV}`);
   logger.info(`🔒 Security headers enabled`);
