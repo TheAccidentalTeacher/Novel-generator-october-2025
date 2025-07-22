@@ -195,12 +195,14 @@ JSON format:
 {
   "outline": [
     {
-      "number": 1,
+      "chapterNumber": 1,
       "title": "Chapter Title",
       "summary": "Key events and plot progression",
       "keyEvents": ["event1", "event2", "event3"],
-      "characters": ["char1", "char2"],
-      "targetWordCount": ${Math.round(job.targetWordCount / job.targetChapters)}
+      "characterFocus": ["char1", "char2"],
+      "plotAdvancement": "How this chapter advances the main plot",
+      "wordTarget": ${Math.round(job.targetWordCount / job.targetChapters)},
+      "genreElements": ["genre-specific element1", "genre-specific element2"]
     }
   ]
 }`;
@@ -394,12 +396,12 @@ CHAPTER OUTLINE:
 Title: ${chapterOutline.title}
 Summary: ${chapterOutline.summary}
 Key Events: ${chapterOutline.keyEvents.join(', ')}
-Target Word Count: ${chapterOutline.targetWordCount}
+Target Word Count: ${chapterOutline.wordTarget}
 
 NOVEL CONTEXT:
 Premise: "${job.premise}"
 Genre: ${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}
-Previous chapters: ${job.chapters.length > 0 ? job.chapters.slice(-3).map(ch => `Ch${ch.number}: ${ch.title} (${ch.wordCount}w)`).join('; ') : 'This is the first chapter'}
+Previous chapters: ${job.chapters.length > 0 ? job.chapters.slice(-3).map(ch => `Ch${ch.chapterNumber}: ${ch.title} (${ch.wordCount}w)`).join('; ') : 'This is the first chapter'}
 Story progress: Chapter ${chapterNumber} of ${job.targetChapters} total
 
 GENRE GUIDELINES:
@@ -416,7 +418,7 @@ Write the complete chapter with:
 - Proper dialogue and action
 - Character development
 - Scene descriptions
-- Approximately ${chapterOutline.targetWordCount} words
+- Approximately ${chapterOutline.wordTarget} words
 
 Write only the chapter content, no metadata or formatting.`;
 
@@ -424,7 +426,7 @@ Write only the chapter content, no metadata or formatting.`;
           model: 'gpt-4o',
           messages: [{ role: 'user', content: chapterPrompt }],
           temperature: 0.7,
-          max_tokens: Math.max(4000, Math.round(chapterOutline.targetWordCount * 1.8)) // Higher multiplier for richer content
+          max_tokens: Math.max(4000, Math.round(chapterOutline.wordTarget * 1.8)) // Higher multiplier for richer content
         });
         
         const chapterContent = response.choices[0].message.content.trim();
@@ -439,7 +441,7 @@ Write only the chapter content, no metadata or formatting.`;
         
         // Create chapter object
         const chapter = {
-          number: chapterNumber,
+          chapterNumber: chapterNumber,
           title: chapterOutline.title,
           content: chapterContent,
           wordCount: wordCount,
@@ -491,7 +493,7 @@ Write only the chapter content, no metadata or formatting.`;
     // Generate remaining chapters
     try {
       // Find chapters that need to be generated
-      const existingChapterNumbers = job.chapters.map(ch => ch.number);
+      const existingChapterNumbers = job.chapters.map(ch => ch.chapterNumber);
       const chaptersToGenerate = job.outline.filter(outline => 
         outline.number >= startFromChapter && !existingChapterNumbers.includes(outline.number)
       );
