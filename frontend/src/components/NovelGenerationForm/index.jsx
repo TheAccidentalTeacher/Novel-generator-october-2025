@@ -43,7 +43,12 @@ function NovelGenerationForm() {
   };
 
   const handleGenreChange = (genre, subgenre) => {
-    setFormData(prev => ({ ...prev, genre, subgenre }));
+    console.log('Genre change:', { genre, subgenre }); // Debug log
+    setFormData(prev => ({ 
+      ...prev, 
+      genre: genre || '', 
+      subgenre: subgenre || '' 
+    }));
   };
 
   const handlePremiseChange = (premise) => {

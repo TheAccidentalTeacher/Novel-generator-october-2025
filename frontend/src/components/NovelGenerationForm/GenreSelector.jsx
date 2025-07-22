@@ -10,23 +10,25 @@ function GenreSelector({ genres, selectedGenre, selectedSubgenre, onChange }) {
       if (genreData) {
         setSubgenres(genreData.subgenres);
         
-        // If the current subgenre is not in the new list, reset it
-        if (!genreData.subgenres.some(sg => sg.name === selectedSubgenre)) {
+        // Only reset subgenre if it's not valid for the new genre
+        if (selectedSubgenre && !genreData.subgenres.some(sg => sg.name === selectedSubgenre)) {
           onChange(selectedGenre, '');
         }
       }
     } else {
       setSubgenres([]);
     }
-  }, [selectedGenre, genres, selectedSubgenre, onChange]);
+  }, [selectedGenre, genres]);
 
   const handleGenreChange = (e) => {
     const newGenre = e.target.value;
-    onChange(newGenre, '');
+    onChange(newGenre, ''); // Always reset subgenre when genre changes
   };
 
   const handleSubgenreChange = (e) => {
-    onChange(selectedGenre, e.target.value);
+    const newSubgenre = e.target.value;
+    console.log('Subgenre selected:', newSubgenre); // Debug log
+    onChange(selectedGenre, newSubgenre);
   };
 
   return (
