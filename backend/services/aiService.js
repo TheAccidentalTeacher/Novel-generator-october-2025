@@ -676,28 +676,35 @@ ${job.humanLikeWriting ? humanWritingEnhancements.prompts.chapter.humanLikeAddit
 ${job.humanLikeWriting ? `SPECIFIC HUMAN-LIKE WRITING REQUIREMENTS FOR THIS CHAPTER:
 
 CHARACTER AUTHENTICITY:
-- Give each character distinctive speech patterns, vocabulary, and verbal tics
+- Give each character distinctive speech patterns, vocabulary, and verbal tics (avoid repetitive trait descriptions)
 - Include dialogue subtext - characters often say one thing while meaning another
 - Show characters making choices that are surprising yet believable given their psychology
 - Include internal contradictions and moments where characters act against their stated beliefs
+- Show genuine interpersonal friction that doesn't resolve easily
+- Let characters fail meaningfully without immediate plot recovery
 
-NARRATIVE COMPLEXITY:
-- Add 2-3 mundane details that don't advance the plot but make the world feel lived-in
-- Include at least one moment where a character misperceives or misinterprets something
-- Show the same events through different characters' perspectives when possible
-- Avoid over-explaining themes - let them emerge through action and dialogue
+NARRATIVE REALISM - AVOID AI PATTERNS:
+- Add 2-3 mundane frustrations that don't advance plot but create authenticity
+- Include equipment failures, miscommunications, physical discomfort at inconvenient times
+- Show characters perceiving the same events differently based on their backgrounds
+- Avoid over-explaining themes or having characters speak too philosophically
+- Let conflicts be messy without convenient solutions
+- Show genuine surprise for protagonists - they should be caught off-guard frequently
 
 SENSORY AND WORLD DEPTH:
-- Include organic humor that emerges naturally from situations (not just from designated funny characters)
-- Reference in-world cultural elements (songs, sayings, shared history) that feel authentic
-- Add minor equipment failures, small annoyances, or everyday complications
-- Vary your prose style subtly based on which character is currently the focus
+- Include organic humor that emerges naturally from situations (not just comic relief characters)
+- Reference specific in-world cultural elements (songs, sayings, shared history)
+- Add small equipment failures, everyday annoyances, or physical complications
+- Vary sensory details - different smells, tastes, textures that characters notice differently
+- Show how personal biases affect perception and memory
 
-STRUCTURAL AUTHENTICITY:
-- End with something unresolved or complicated rather than neat closure
-- Include unexpected moments that don't necessarily serve the main plot
-- Let conflicts be messy and not resolve too cleanly
-- Avoid repetitive phrases or character descriptions from previous chapters
+STRUCTURAL AUTHENTICITY - BREAK FORMULAS:
+- Avoid setup-conflict-resolution chapter structure
+- End with something unresolved, complicated, or genuinely surprising
+- Include unexpected moments that don't serve the main plot but reveal character
+- Break expected narrative patterns - let solutions fail, communications break down
+- Vary prose style based on which character is currently the focus
+- Make antagonists complex with understandable motivations beyond simple greed
 
 Write approximately ${chapterOutline.wordTarget} words of engaging, human-like prose that feels discovered rather than constructed.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
