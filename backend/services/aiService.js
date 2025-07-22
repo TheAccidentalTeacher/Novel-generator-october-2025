@@ -17,6 +17,8 @@ class AIService {
     this.activeJobs = new Map();
     
     // Cost tracking per model (prices as of 2024)
+    // Model limits: gpt-4o/gpt-4o-mini context: 128K tokens, output: 16K tokens
+    // For novel generation, we prioritize quality over artificial token limits
     this.costTracking = {
       'gpt-4o': {
         inputCost: 0.005,  // $0.005 per 1K tokens
@@ -131,7 +133,7 @@ Respond in JSON format:
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: analysisPrompt }],
         temperature: 0.3,
-        max_tokens: 1500
+        max_tokens: 4000 // Increased for detailed analysis
       });
       
       const analysisResult = this.extractJSON(response.choices[0].message.content);
@@ -180,35 +182,24 @@ Respond in JSON format:
       const outlineStart = Date.now();
       
       const outlinePrompt = `
-Create a detailed chapter-by-chapter outline for this novel:
+Create a ${job.targetChapters}-chapter outline for "${job.title}" (${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}).
 
-PREMISE: "${job.premise}"
-TITLE: "${job.title}"
-GENRE: ${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}
-TARGET CHAPTERS: ${job.targetChapters}
-TARGET WORD COUNT: ${job.targetWordCount}
+PREMISE: ${job.premise}
+WORD COUNT: ${job.targetWordCount} total (~${Math.round(job.targetWordCount / job.targetChapters)} per chapter)
 
-ANALYSIS RESULTS:
-${JSON.stringify(job.analysis, null, 2)}
+ANALYSIS: ${JSON.stringify(job.analysis, null, 1)}
 
-Create exactly ${job.targetChapters} chapters. Each chapter should be approximately ${Math.round(job.targetWordCount / job.targetChapters)} words.
+Create exactly ${job.targetChapters} chapters with concise but detailed descriptions.
 
-For each chapter, provide:
-- Chapter number and title
-- Key events and plot points
-- Character development moments
-- Conflict/tension elements
-- Connection to overall story arc
-
-Respond in JSON format:
+JSON format:
 {
   "outline": [
     {
       "number": 1,
       "title": "Chapter Title",
-      "summary": "Brief summary",
-      "keyEvents": ["event1", "event2"],
-      "characters": ["character1", "character2"],
+      "summary": "Key events and plot progression",
+      "keyEvents": ["event1", "event2", "event3"],
+      "characters": ["char1", "char2"],
       "targetWordCount": ${Math.round(job.targetWordCount / job.targetChapters)}
     }
   ]
@@ -218,7 +209,7 @@ Respond in JSON format:
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: outlinePrompt }],
         temperature: 0.4,
-        max_tokens: 3000
+        max_tokens: Math.max(16000, job.targetChapters * 400) // No arbitrary upper limit, scale with needs
       });
       
       const outlineResult = this.extractJSON(response.choices[0].message.content);
@@ -408,13 +399,17 @@ Target Word Count: ${chapterOutline.targetWordCount}
 NOVEL CONTEXT:
 Premise: "${job.premise}"
 Genre: ${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}
-Previous chapters context: ${job.chapters.length > 0 ? job.chapters.slice(-2).map(ch => `Chapter ${ch.number}: ${ch.title}`).join('; ') : 'This is the first chapter'}
+Previous chapters: ${job.chapters.length > 0 ? job.chapters.slice(-3).map(ch => `Ch${ch.number}: ${ch.title} (${ch.wordCount}w)`).join('; ') : 'This is the first chapter'}
+Story progress: Chapter ${chapterNumber} of ${job.targetChapters} total
 
 GENRE GUIDELINES:
 ${genreInstruction}
 
 ANALYSIS CONTEXT:
-${JSON.stringify(job.analysis, null, 2)}
+${job.targetChapters > 20 ? 
+  `Key themes: ${job.analysis.themes?.join(', ') || 'N/A'}
+Main characters: ${job.analysis.characters?.join(', ') || 'N/A'}` :
+  JSON.stringify(job.analysis, null, 1)}
 
 Write the complete chapter with:
 - Engaging prose appropriate to the genre
@@ -429,7 +424,7 @@ Write only the chapter content, no metadata or formatting.`;
           model: 'gpt-4o',
           messages: [{ role: 'user', content: chapterPrompt }],
           temperature: 0.7,
-          max_tokens: Math.min(4000, Math.round(chapterOutline.targetWordCount * 1.5))
+          max_tokens: Math.max(4000, Math.round(chapterOutline.targetWordCount * 1.8)) // Higher multiplier for richer content
         });
         
         const chapterContent = response.choices[0].message.content.trim();
