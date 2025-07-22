@@ -36,7 +36,7 @@ class AIService {
     // Add to active jobs
     this.activeJobs.set(jobId, {
       startTime: Date.now(),
-      status: 'analyzing'
+      status: 'planning'
     });
     
     try {
@@ -75,7 +75,7 @@ class AIService {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
     
-    job.status = 'analyzing';
+    job.status = 'planning';
     job.currentPhase = 'premise_analysis';
     job.progress.lastActivity = new Date();
     await job.save();
@@ -573,7 +573,7 @@ Write only the chapter content, no metadata or formatting.`;
       const job = await Job.findById(jobId);
       if (job) {
         job.status = 'failed';
-        job.currentPhase = 'error';
+        // Keep the current phase instead of setting invalid 'error'
         job.error = {
           message: error.message,
           phase: phase || job.currentPhase,
@@ -584,7 +584,7 @@ Write only the chapter content, no metadata or formatting.`;
         
         emitJobUpdate(jobId, {
           status: 'failed',
-          currentPhase: 'error',
+          currentPhase: job.currentPhase,
           error: error.message,
           message: `Generation failed: ${error.message}`
         });
