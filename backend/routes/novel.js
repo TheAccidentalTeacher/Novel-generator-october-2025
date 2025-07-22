@@ -159,7 +159,7 @@ const checkConcurrentJobs = async (req, res, next) => {
   try {
     const maxConcurrentJobs = parseInt(process.env.MAX_CONCURRENT_JOBS || '3');
     const activeJobs = await Job.countDocuments({
-      status: { $in: ['planning', 'analyzing', 'outlining', 'writing'] }
+      status: { $in: ['planning', 'outlining', 'writing'] }
     });
     
     if (activeJobs >= maxConcurrentJobs) {
