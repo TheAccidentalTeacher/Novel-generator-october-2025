@@ -100,38 +100,21 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Connect to MongoDB with error handling (skip for test environment)
 let mongoConnection = null;
-async function initializeMongoDB() {
-  if (process.env.NODE_ENV !== 'test') {
-    try {
-      console.log('📊 Connecting to MongoDB...');
-      console.log('🔗 MongoDB URI format:', process.env.MONGODB_URI ? 'Set (length: ' + process.env.MONGODB_URI.length + ')' : 'Not set');
-      
-      // Add timeout for MongoDB connection
-      const connectionPromise = connectDB();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('MongoDB connection timeout after 30 seconds')), 30000)
-      );
-      
-      await Promise.race([connectionPromise, timeoutPromise]);
-      mongoConnection = true;
-      logger.info('MongoDB connection established');
-      console.log('✅ MongoDB connected successfully');
-    } catch (error) {
-      logger.error('Failed to connect to MongoDB:', error);
-      console.error('❌ MongoDB connection failed:', error.message);
-      
-      // Log more details for debugging
-      console.error('MongoDB URI exists:', !!process.env.MONGODB_URI);
-      console.error('NODE_ENV:', process.env.NODE_ENV);
-      
-      // Don't exit immediately, let the server start anyway for health checks
-      console.error('⚠️  Starting server without MongoDB connection - health checks will show disconnected state');
-      mongoConnection = false;
-    }
-  } else {
-    logger.info('Skipping MongoDB connection in test environment');
+if (process.env.NODE_ENV !== 'test') {
+  console.log('📊 Connecting to MongoDB...');
+  connectDB().then(() => {
     mongoConnection = true;
-  }
+    logger.info('MongoDB connection established');
+    console.log('✅ MongoDB connected successfully');
+  }).catch(error => {
+    logger.error('Failed to connect to MongoDB:', error);
+    console.error('❌ MongoDB connection failed:', error.message);
+    // Don't exit - let server start anyway
+    mongoConnection = false;
+  });
+} else {
+  logger.info('Skipping MongoDB connection in test environment');
+  mongoConnection = true;
 }
 
 // Initialize WebSocket with error handling
@@ -516,64 +499,38 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start server
-async function startServer() {
-  try {
-    const PORT = process.env.PORT || 3000;
-    console.log('🎯 Initializing application...');
-    
-    // Initialize MongoDB connection first (but don't fail if it doesn't work)
-    await initializeMongoDB();
-    
-    console.log('🎯 Starting server on port:', PORT);
-    
-    server.listen(PORT, (err) => {
-      if (err) {
-        console.error('❌ FAILED TO START SERVER:', err);
-        logger.error('Failed to start server:', err);
-        process.exit(1);
-      }
-      
-      console.log('🎉 SERVER SUCCESSFULLY STARTED!');
-      console.log(`🌐 Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-      console.log(`🔍 Health check available at: http://localhost:${PORT}/health`);
-      console.log(`🕐 Server started at: ${new Date().toISOString()}`);
-      console.log(`🗄️  MongoDB status: ${mongoConnection ? 'Connected' : 'Disconnected'}`);
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`📊 Environment: ${process.env.NODE_ENV}`);
-      logger.info(`🔒 Security headers enabled`);
-      logger.info(`🗄️  MongoDB connection: ${mongoConnection ? 'established' : 'failed'}`);
-      
-      // Start recovery service after server is listening (only if MongoDB is connected)
-      try {
-        if (mongoConnection) {
-          recoveryService.startPeriodicCheck();
-          logger.info('🔄 Recovery service started');
-        } else {
-          logger.warn('⚠️  Recovery service not started - MongoDB connection required');
-        }
-      } catch (error) {
-        logger.error('Failed to start recovery service:', error);
-      }
-    });
-    
-  } catch (error) {
-    console.error('❌ FAILED TO INITIALIZE APPLICATION:', error);
-    logger.error('Failed to initialize application:', error);
-    
-    // Log more debugging info
-    console.error('Environment variables check:');
-    console.error('- NODE_ENV:', process.env.NODE_ENV);
-    console.error('- PORT:', process.env.PORT);
-    console.error('- MONGODB_URI exists:', !!process.env.MONGODB_URI);
-    console.error('- OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
-    
+const PORT = process.env.PORT || 3000;
+console.log('🎯 Attempting to start server on port:', PORT);
+
+server.listen(PORT, (err) => {
+  if (err) {
+    console.error('❌ FAILED TO START SERVER:', err);
+    logger.error('Failed to start server:', err);
     process.exit(1);
   }
-}
-
-// Start the application
-startServer();
+  
+  console.log('🎉 SERVER SUCCESSFULLY STARTED!');
+  console.log(`🌐 Server running on port ${PORT}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+  console.log(`🔍 Health check available at: http://localhost:${PORT}/health`);
+  console.log(`🕐 Server started at: ${new Date().toISOString()}`);
+  console.log(`🗄️  MongoDB status: ${mongoConnection ? 'Connected' : 'Disconnected'}`);
+  logger.info(`🚀 Server running on port ${PORT}`);
+  logger.info(`📊 Environment: ${process.env.NODE_ENV}`);
+  logger.info(`🔒 Security headers enabled`);
+  
+  // Start recovery service after server is listening (only if MongoDB is connected)
+  try {
+    if (mongoConnection) {
+      recoveryService.startPeriodicCheck();
+      logger.info('🔄 Recovery service started');
+    } else {
+      logger.warn('⚠️  Recovery service not started - MongoDB connection required');
+    }
+  } catch (error) {
+    logger.error('Failed to start recovery service:', error);
+  }
+});
 
 // Handle server errors
 server.on('error', (error) => {

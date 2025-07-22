@@ -14,25 +14,15 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
   try {
-    // Check if MongoDB is connected, but don't fail health check if it's still connecting
-    const mongoReady = mongoose.connection.readyState === 1;
-    const mongoConnecting = mongoose.connection.readyState === 2;
-    
     const health = {
-      status: 'ok', // Always return ok for basic health check
+      status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      database: {
-        connected: mongoReady,
-        connecting: mongoConnecting,
-        readyState: mongoose.connection.readyState,
-        readyStateString: getReadyStateString(mongoose.connection.readyState)
-      }
+      environment: process.env.NODE_ENV || 'development'
     };
 
-    // Always return 200 for basic health check - let detailed health check handle strict checks
+    // Always return 200 for basic health check
     res.status(200).json(health);
   } catch (error) {
     logger.error('Health check failed:', error);
@@ -44,17 +34,6 @@ router.get('/', async (req, res) => {
     });
   }
 });
-
-// Helper function to convert MongoDB ready state to string
-function getReadyStateString(readyState) {
-  const states = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting'
-  };
-  return states[readyState] || 'unknown';
-}
 
 /**
  * Detailed health check with dependency status

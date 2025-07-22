@@ -588,11 +588,11 @@ JSON format:
       chapterOutline.wordTarget = Math.round(job.targetWordCount / job.targetChapters);
     }
     
-    const maxAttempts = 3;
-    let attempts = 0;
+    const maxRetries = 3;
+    let retryCount = 0;
     
-    while (attempts < maxAttempts) {
-      attempts++;
+    while (retryCount < maxRetries) {
+      retryCount++;
       
       try {
         const chapterStart = Date.now();
@@ -658,23 +658,23 @@ Write only the chapter content, no metadata or formatting.`;
           wordCount: wordCount,
           tokensUsed: response.usage.total_tokens,
           cost: cost,
-          attempts: attempts,
+          attempts: attempts, // This is the parameter passed to the function
           generationTime: Date.now() - chapterStart
         };
         
-        logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words, attempt ${attempts})`);
+        logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words, attempt ${retryCount})`);
         
         return chapter;
         
       } catch (error) {
-        logger.error(`Attempt ${attempts} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
+        logger.error(`Attempt ${retryCount} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
         
-        if (attempts >= maxAttempts) {
-          throw new Error(`Failed to generate chapter ${chapterNumber} after ${maxAttempts} attempts: ${error.message}`);
+        if (retryCount >= maxRetries) {
+          throw new Error(`Failed to generate chapter ${chapterNumber} after ${maxRetries} attempts: ${error.message}`);
         }
         
         // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
       }
     }
   }
