@@ -91,6 +91,9 @@ const requestLimiter = require('./middleware/requestLimiter');
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for Railway deployment (fixes rate limiting behind reverse proxy)
+app.set('trust proxy', 1);
+
 // Production security configuration
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';

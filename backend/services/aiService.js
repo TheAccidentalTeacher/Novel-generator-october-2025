@@ -134,7 +134,7 @@ Respond in JSON format:
         max_tokens: 1500
       });
       
-      const analysisResult = JSON.parse(response.choices[0].message.content);
+      const analysisResult = this.extractJSON(response.choices[0].message.content);
       
       // Calculate cost
       const cost = this.calculateCost(
@@ -221,7 +221,7 @@ Respond in JSON format:
         max_tokens: 3000
       });
       
-      const outlineResult = JSON.parse(response.choices[0].message.content);
+      const outlineResult = this.extractJSON(response.choices[0].message.content);
       
       // Calculate cost
       const cost = this.calculateCost(
@@ -608,6 +608,30 @@ Write only the chapter content, no metadata or formatting.`;
   countWords(text) {
     if (!text || typeof text !== 'string') return 0;
     return text.split(/\s+/).filter(word => word.length > 0).length;
+  }
+  
+  // Extract JSON from OpenAI response that may contain extra text
+  extractJSON(content) {
+    if (!content) throw new Error('Empty response from OpenAI');
+    
+    try {
+      // First try direct JSON parsing
+      return JSON.parse(content);
+    } catch (error) {
+      // Look for JSON within the content
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          return JSON.parse(jsonMatch[0]);
+        } catch (innerError) {
+          logger.error('Failed to parse extracted JSON:', jsonMatch[0]);
+          throw new Error(`Invalid JSON in response: ${innerError.message}`);
+        }
+      }
+      
+      logger.error('No valid JSON found in OpenAI response:', content);
+      throw new Error('OpenAI response does not contain valid JSON');
+    }
   }
   
   // Get active job status
