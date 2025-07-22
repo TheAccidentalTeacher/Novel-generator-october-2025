@@ -32,6 +32,14 @@ const outlineChapterSchema = new mongoose.Schema({
   genreElements: {
     type: [String],
     required: true
+  },
+  humanLikeElements: {
+    structureType: String,
+    characterConflict: String,
+    moralComplexity: String,
+    unresolvedElement: String,
+    surpriseElement: String,
+    mundaneDetail: String
   }
 });
 
@@ -120,6 +128,11 @@ const jobSchema = new mongoose.Schema({
     required: true,
     min: 5,
     max: 50
+  },
+  humanLikeWriting: {
+    type: Boolean,
+    default: true,
+    required: true
   },
   
   // Generated content

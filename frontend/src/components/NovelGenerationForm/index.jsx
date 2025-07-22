@@ -16,7 +16,8 @@ function NovelGenerationForm() {
     subgenre: '',
     premise: '',
     targetWordCount: 50000,
-    targetChapters: 15
+    targetChapters: 15,
+    humanLikeWriting: true // Default to enabled for better user experience
   });
   const [genres, setGenres] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -114,6 +115,7 @@ function NovelGenerationForm() {
         <NovelConfigForm
           targetWordCount={formData.targetWordCount}
           targetChapters={formData.targetChapters}
+          humanLikeWriting={formData.humanLikeWriting}
           onChange={handleInputChange}
         />
         

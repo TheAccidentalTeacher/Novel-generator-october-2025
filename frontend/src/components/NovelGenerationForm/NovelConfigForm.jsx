@@ -1,6 +1,6 @@
 import '../../styles/NovelConfigForm.css';
 
-function NovelConfigForm({ targetWordCount, targetChapters, onChange }) {
+function NovelConfigForm({ targetWordCount, targetChapters, humanLikeWriting, onChange }) {
   const handleWordCountChange = (e) => {
     const value = parseInt(e.target.value);
     onChange({
@@ -17,6 +17,15 @@ function NovelConfigForm({ targetWordCount, targetChapters, onChange }) {
       target: {
         name: 'targetChapters',
         value: value
+      }
+    });
+  };
+
+  const handleHumanLikeChange = (e) => {
+    onChange({
+      target: {
+        name: 'humanLikeWriting',
+        value: e.target.checked
       }
     });
   };
@@ -55,9 +64,31 @@ function NovelConfigForm({ targetWordCount, targetChapters, onChange }) {
         />
         <div className="range-value">{targetChapters} chapters</div>
       </div>
+
+      <div className="form-group">
+        <div className="checkbox-group">
+          <input
+            type="checkbox"
+            id="humanLikeWriting"
+            checked={humanLikeWriting}
+            onChange={handleHumanLikeChange}
+          />
+          <label htmlFor="humanLikeWriting" className="checkbox-label">
+            <strong>Enhanced Human-Like Writing</strong>
+            <span className="feature-description">
+              Enable advanced techniques for more authentic storytelling: varied chapter structures, 
+              complex characters with internal conflicts, distinctive dialogue, unresolved plot elements, 
+              and organic narrative complexity.
+            </span>
+          </label>
+        </div>
+      </div>
       
       <div className="chapter-length-info">
         Average chapter length: <strong>{avgChapterLength.toLocaleString()} words</strong>
+        {humanLikeWriting && <div className="human-like-note">
+          ✨ Human-like writing will create varied chapter lengths and complex narrative structures
+        </div>}
       </div>
     </div>
   );

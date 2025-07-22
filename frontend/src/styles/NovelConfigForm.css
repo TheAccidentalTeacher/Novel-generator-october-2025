@@ -31,12 +31,52 @@
   color: var(--primary-color);
 }
 
+.human-like-note {
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: var(--primary-color);
+  font-style: italic;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.checkbox-label strong {
+  color: var(--primary-color);
+  font-size: 1.1em;
+}
+
+.feature-description {
+  font-size: 0.9em;
+  color: var(--light-text);
+  line-height: 1.4;
+}
+
+#humanLikeWriting {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--primary-color);
+}
+
 input[type="range"] {
   width: 100%;
   height: 6px;
   background: var(--border-color);
   border-radius: 3px;
   outline: none;
+  appearance: none;
   -webkit-appearance: none;
 }
 

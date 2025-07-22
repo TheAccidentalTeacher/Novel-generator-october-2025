@@ -3,6 +3,7 @@ const Job = require('../models/job');
 const logger = require('../logger');
 const { emitJobUpdate } = require('../websocket');
 const genreInstructions = require('../shared/genreInstructions');
+const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 
 class AIService {
   constructor() {
@@ -110,23 +111,43 @@ TARGET CHAPTERS: ${job.targetChapters}
 GENRE GUIDELINES:
 ${genreInstruction}
 
-Please provide:
-1. Theme analysis
-2. Character archetypes needed
-3. Plot structure recommendations
-4. Key story beats for this genre
-5. Potential subplots
-6. Tone and style guidance
+${job.humanLikeWriting ? humanWritingEnhancements.prompts.analysis.humanLikeAdditions : ''}
+
+Please provide a comprehensive analysis that prioritizes ${job.humanLikeWriting ? 'authentic, human-like storytelling' : 'engaging storytelling'}:
+
+ANALYSIS REQUIREMENTS:
+1. Theme analysis - themes that allow for moral complexity
+2. Character archetypes - with internal contradictions and growth potential
+3. Plot structure - that accommodates meaningful failures and setbacks
+4. Key story beats - including moments of genuine uncertainty
+5. Potential subplots - that may remain partially unresolved
+6. Tone and style guidance - that varies subtly throughout
+${job.humanLikeWriting ? `7. HUMAN-LIKE ELEMENTS:
+   - Internal character conflicts that create lasting tension
+   - Opportunities for protagonist to be genuinely wrong
+   - Morally ambiguous situations requiring difficult choices
+   - Cultural/world elements that add lived-in authenticity
+   - Distinctive character voice planning (speech patterns, vocabulary)` : `7. ENGAGING ELEMENTS:
+   - Clear character motivations and goals
+   - Compelling conflicts and obstacles
+   - Satisfying story progression
+   - Genre-appropriate atmosphere and tone`}
 
 Respond in JSON format:
 {
   "themes": ["theme1", "theme2"],
-  "characters": ["character_type1", "character_type2"],
-  "plotStructure": "three-act/hero-journey/etc",
+  "characters": [{"type": "character_type", "conflicts": "internal_struggles", "speechPattern": "distinctive_traits"}],
+  "plotStructure": "structure_with_flexibility_for_messiness",
   "keyBeats": ["beat1", "beat2"],
-  "subplots": ["subplot1", "subplot2"],
-  "tone": "description",
-  "styleNotes": "guidance"
+  "subplots": [{"main": "subplot", "resolution": "complete|partial|unresolved"}],
+  "tone": "description_that_allows_variation",
+  "styleNotes": "guidance_for_character_specific_prose"${job.humanLikeWriting ? `,
+  "humanLikeElements": {
+    "characterConflicts": ["lasting_disagreement1", "lasting_disagreement2"],
+    "moralDilemmas": ["situation1", "situation2"],
+    "culturalElements": ["in_world_reference1", "in_world_reference2"],
+    "unresolvedElements": ["mystery1", "relationship_tension1"]
+  }` : ''}
 }`;
 
       const response = await this.openai.chat.completions.create({
@@ -189,7 +210,23 @@ WORD COUNT: ${job.targetWordCount} total (~${Math.round(job.targetWordCount / jo
 
 ANALYSIS: ${JSON.stringify(job.analysis || {}, null, 1)}
 
-Create exactly ${job.targetChapters} chapters with concise but detailed descriptions.
+${job.humanLikeWriting ? humanWritingEnhancements.prompts.outline.humanLikeAdditions : ''}
+
+${job.humanLikeWriting ? `HUMAN-LIKE OUTLINE REQUIREMENTS:
+- Create significant variation in chapter lengths (some 800 words, others 3000+ words)
+- Mix chapter types: action, dialogue-heavy, introspective, world-building focused
+- Plan at least 2 meaningful character failures that don't immediately resolve
+- Include 1-2 chapters with unresolved endings that complicate rather than clarify
+- Design at least one major plot twist that genuinely surprises (not just reveals)
+- Ensure internal character conflicts span multiple chapters without easy resolution
+- Plan chapters that show the same events from different character perspectives
+- Include at least one chapter told through non-traditional format (logs, messages, flashbacks)` : `OUTLINE REQUIREMENTS:
+- Create engaging chapter progression with clear story beats
+- Build tension and character development throughout
+- Include compelling conflicts and resolutions
+- Maintain genre conventions and reader expectations`}
+
+Create exactly ${job.targetChapters} chapters with detailed descriptions that embrace ${job.humanLikeWriting ? 'narrative complexity' : 'engaging storytelling'}:
 
 JSON format:
 {
@@ -200,9 +237,17 @@ JSON format:
       "summary": "Key events and plot progression",
       "keyEvents": ["event1", "event2", "event3"],
       "characterFocus": ["char1", "char2"],
-      "plotAdvancement": "How this chapter advances the main plot",
+      "plotAdvancement": "How this chapter advances or complicates the main plot",
       "wordTarget": ${Math.round(job.targetWordCount / job.targetChapters)},
-      "genreElements": ["genre-specific element1", "genre-specific element2"]
+      "genreElements": ["genre-specific element1", "genre-specific element2"]${job.humanLikeWriting ? `,
+      "humanLikeElements": {
+        "structureType": "traditional|dialogue-heavy|introspective|action|logs|flashback",
+        "characterConflict": "internal_or_interpersonal_tension_introduced_or_developed",
+        "moralComplexity": "ethical_dilemma_or_ambiguous_situation",
+        "unresolvedElement": "something_left_hanging_or_complicated",
+        "surpriseElement": "unexpected_development_or_character_choice",
+        "mundaneDetail": "lived_in_world_element_that_adds_authenticity"
+      }` : ''}
     }
   ]
 }`;
@@ -607,7 +652,8 @@ CHAPTER OUTLINE:
 Title: ${chapterOutline.title}
 Summary: ${chapterOutline.summary}
 Key Events: ${chapterOutline.keyEvents.join(', ')}
-Target Word Count: ${chapterOutline.wordTarget}
+Target Word Count: ${chapterOutline.wordTarget}${job.humanLikeWriting ? `
+Human-Like Elements: ${JSON.stringify(chapterOutline.humanLikeElements || {}, null, 1)}` : ''}
 
 NOVEL CONTEXT:
 Premise: "${job.premise}"
@@ -621,15 +667,39 @@ ${genreInstruction}
 ANALYSIS CONTEXT:
 ${job.targetChapters > 20 ? 
   `Key themes: ${job.analysis?.themes?.join(', ') || 'N/A'}
-Main characters: ${job.analysis?.characters?.join(', ') || 'N/A'}` :
+Main characters: ${job.analysis?.characters?.join(', ') || 'N/A'}${job.humanLikeWriting ? `
+Human-like story elements: ${JSON.stringify(job.analysis?.humanLikeElements || {}, null, 1)}` : ''}` :
   JSON.stringify(job.analysis || {}, null, 1)}
 
-Write the complete chapter with:
-- Engaging prose appropriate to the genre
-- Proper dialogue and action
-- Character development
-- Scene descriptions
-- Approximately ${chapterOutline.wordTarget} words
+${job.humanLikeWriting ? humanWritingEnhancements.prompts.chapter.humanLikeAdditions : ''}
+
+${job.humanLikeWriting ? `SPECIFIC HUMAN-LIKE WRITING REQUIREMENTS FOR THIS CHAPTER:
+
+CHARACTER AUTHENTICITY:
+- Give each character distinctive speech patterns, vocabulary, and verbal tics
+- Include dialogue subtext - characters often say one thing while meaning another
+- Show characters making choices that are surprising yet believable given their psychology
+- Include internal contradictions and moments where characters act against their stated beliefs
+
+NARRATIVE COMPLEXITY:
+- Add 2-3 mundane details that don't advance the plot but make the world feel lived-in
+- Include at least one moment where a character misperceives or misinterprets something
+- Show the same events through different characters' perspectives when possible
+- Avoid over-explaining themes - let them emerge through action and dialogue
+
+SENSORY AND WORLD DEPTH:
+- Include organic humor that emerges naturally from situations (not just from designated funny characters)
+- Reference in-world cultural elements (songs, sayings, shared history) that feel authentic
+- Add minor equipment failures, small annoyances, or everyday complications
+- Vary your prose style subtly based on which character is currently the focus
+
+STRUCTURAL AUTHENTICITY:
+- End with something unresolved or complicated rather than neat closure
+- Include unexpected moments that don't necessarily serve the main plot
+- Let conflicts be messy and not resolve too cleanly
+- Avoid repetitive phrases or character descriptions from previous chapters
+
+Write approximately ${chapterOutline.wordTarget} words of engaging, human-like prose that feels discovered rather than constructed.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
 Write only the chapter content, no metadata or formatting.`;
 
