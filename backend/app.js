@@ -100,17 +100,22 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Connect to MongoDB with error handling (skip for test environment)
 let mongoConnection = null;
-if (process.env.NODE_ENV !== 'test') {
-  connectDB().then(() => {
+async function initializeMongoDB() {
+  if (process.env.NODE_ENV !== 'test') {
+    try {
+      await connectDB();
+      mongoConnection = true;
+      logger.info('MongoDB connection established');
+      console.log('✅ MongoDB connected successfully');
+    } catch (error) {
+      logger.error('Failed to connect to MongoDB:', error);
+      console.error('❌ MongoDB connection failed:', error.message);
+      process.exit(1);
+    }
+  } else {
+    logger.info('Skipping MongoDB connection in test environment');
     mongoConnection = true;
-    logger.info('MongoDB connection established');
-  }).catch(error => {
-    logger.error('Failed to connect to MongoDB:', error);
-    process.exit(1);
-  });
-} else {
-  logger.info('Skipping MongoDB connection in test environment');
-  mongoConnection = true;
+  }
 }
 
 // Initialize WebSocket with error handling
@@ -495,33 +500,51 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
-console.log('🎯 Attempting to start server on port:', PORT);
-
-server.listen(PORT, (err) => {
-  if (err) {
-    console.error('❌ FAILED TO START SERVER:', err);
-    logger.error('Failed to start server:', err);
+async function startServer() {
+  try {
+    const PORT = process.env.PORT || 3000;
+    console.log('🎯 Initializing application...');
+    
+    // Initialize MongoDB connection first
+    console.log('📊 Connecting to MongoDB...');
+    await initializeMongoDB();
+    
+    console.log('🎯 Starting server on port:', PORT);
+    
+    server.listen(PORT, (err) => {
+      if (err) {
+        console.error('❌ FAILED TO START SERVER:', err);
+        logger.error('Failed to start server:', err);
+        process.exit(1);
+      }
+      
+      console.log('🎉 SERVER SUCCESSFULLY STARTED!');
+      console.log(`🌐 Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+      console.log(`🔍 Health check available at: http://localhost:${PORT}/health`);
+      console.log(`🕐 Server started at: ${new Date().toISOString()}`);
+      logger.info(`🚀 Server running on port ${PORT}`);
+      logger.info(`📊 Environment: ${process.env.NODE_ENV}`);
+      logger.info(`🔒 Security headers enabled`);
+      
+      // Start recovery service after server is listening
+      try {
+        recoveryService.startPeriodicCheck();
+        logger.info('🔄 Recovery service started');
+      } catch (error) {
+        logger.error('Failed to start recovery service:', error);
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ FAILED TO INITIALIZE APPLICATION:', error);
+    logger.error('Failed to initialize application:', error);
     process.exit(1);
   }
-  
-  console.log('🎉 SERVER SUCCESSFULLY STARTED!');
-  console.log(`🌐 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🔍 Health check available at: http://localhost:${PORT}/health`);
-  console.log(`🕐 Server started at: ${new Date().toISOString()}`);
-  logger.info(`🚀 Server running on port ${PORT}`);
-  logger.info(`📊 Environment: ${process.env.NODE_ENV}`);
-  logger.info(`🔒 Security headers enabled`);
-  
-  // Start recovery service after server is listening
-  try {
-    recoveryService.startPeriodicCheck();
-    logger.info('🔄 Recovery service started');
-  } catch (error) {
-    logger.error('Failed to start recovery service:', error);
-  }
-});
+}
+
+// Start the application
+startServer();
 
 // Handle server errors
 server.on('error', (error) => {

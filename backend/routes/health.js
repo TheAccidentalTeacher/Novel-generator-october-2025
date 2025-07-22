@@ -14,21 +14,31 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
   try {
+    // Check if MongoDB is connected
+    const mongoReady = mongoose.connection.readyState === 1;
+    
     const health = {
-      status: 'ok',
+      status: mongoReady ? 'ok' : 'error',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
+      database: {
+        connected: mongoReady,
+        readyState: mongoose.connection.readyState
+      }
     };
 
-    res.status(200).json(health);
+    // Return 503 if database not ready, 200 if everything is ok
+    const statusCode = mongoReady ? 200 : 503;
+    res.status(statusCode).json(health);
   } catch (error) {
     logger.error('Health check failed:', error);
     res.status(503).json({
       status: 'error',
       timestamp: new Date().toISOString(),
-      error: 'Health check failed'
+      error: 'Health check failed',
+      message: error.message
     });
   }
 });
