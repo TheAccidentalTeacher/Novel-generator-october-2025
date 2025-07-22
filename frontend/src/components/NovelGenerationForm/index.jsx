@@ -43,7 +43,7 @@ function NovelGenerationForm() {
   };
 
   const handleGenreChange = (genre, subgenre) => {
-    console.log('Genre change:', { genre, subgenre }); // Debug log
+    console.log('Genre change:', JSON.stringify({ genre, subgenre }, null, 2)); // Debug log
     setFormData(prev => ({ 
       ...prev, 
       genre: genre || '', 
@@ -74,7 +74,7 @@ function NovelGenerationForm() {
       setIsLoading(true);
       setError(null);
       
-      console.log('Form data being submitted:', formData);
+      console.log('Form data being submitted:', JSON.stringify(formData, null, 2));
       const result = await generateNovel(formData);
       dispatch({ type: 'START_GENERATION', payload: { jobId: result.jobId } });
       navigate(`/progress/${result.jobId}`);
