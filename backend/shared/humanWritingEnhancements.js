@@ -1,6 +1,7 @@
 // humanWritingEnhancements.js - Configuration for making AI-generated novels feel more human
 // Based on analysis feedback for "Copper Stars: The McCarthy Expeditions"
 // Updated with expanded synopsis feedback addressing specific AI patterns to avoid
+// Integrated with Universal Framework for Humanizing AI-Generated Fiction
 
 const humanWritingEnhancements = {
   // Core improvement areas identified in analysis

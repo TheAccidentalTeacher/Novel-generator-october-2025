@@ -4,6 +4,7 @@ const logger = require('../logger');
 const { emitJobUpdate } = require('../websocket');
 const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
+const universalFramework = require('../shared/universalHumanWritingFramework');
 
 class AIService {
   constructor() {
@@ -113,6 +114,8 @@ ${genreInstruction}
 
 ${job.humanLikeWriting ? humanWritingEnhancements.prompts.analysis.humanLikeAdditions : ''}
 
+${job.humanLikeWriting ? universalFramework.promptEnhancements.analysis : ''}
+
 Please provide a comprehensive analysis that prioritizes ${job.humanLikeWriting ? 'authentic, human-like storytelling' : 'engaging storytelling'}:
 
 ANALYSIS REQUIREMENTS:
@@ -211,6 +214,8 @@ WORD COUNT: ${job.targetWordCount} total (~${Math.round(job.targetWordCount / jo
 ANALYSIS: ${JSON.stringify(job.analysis || {}, null, 1)}
 
 ${job.humanLikeWriting ? humanWritingEnhancements.prompts.outline.humanLikeAdditions : ''}
+
+${job.humanLikeWriting ? universalFramework.promptEnhancements.outline : ''}
 
 ${job.humanLikeWriting ? `HUMAN-LIKE OUTLINE REQUIREMENTS:
 - Create significant variation in chapter lengths (some 800 words, others 3000+ words)
@@ -673,40 +678,47 @@ Human-like story elements: ${JSON.stringify(job.analysis?.humanLikeElements || {
 
 ${job.humanLikeWriting ? humanWritingEnhancements.prompts.chapter.humanLikeAdditions : ''}
 
-${job.humanLikeWriting ? `SPECIFIC HUMAN-LIKE WRITING REQUIREMENTS FOR THIS CHAPTER:
+${job.humanLikeWriting ? universalFramework.promptEnhancements.chapter : ''}
 
-CHARACTER AUTHENTICITY:
-- Give each character distinctive speech patterns, vocabulary, and verbal tics (avoid repetitive trait descriptions)
-- Include dialogue subtext - characters often say one thing while meaning another
-- Show characters making choices that are surprising yet believable given their psychology
-- Include internal contradictions and moments where characters act against their stated beliefs
+${job.humanLikeWriting ? `UNIVERSAL FRAMEWORK IMPLEMENTATION FOR THIS CHAPTER:
+
+CHARACTER FALLIBILITY IN ACTION:
+- Show characters making decisions driven by their core psychological flaws (avoid repetitive trait descriptions)
+- Include meaningful failures that have real, lasting consequences beyond this chapter
+- Let character strengths become weaknesses when taken to extremes or under pressure
 - Show genuine interpersonal friction that doesn't resolve easily
-- Let characters fail meaningfully without immediate plot recovery
 
-NARRATIVE REALISM - AVOID AI PATTERNS:
-- Add 2-3 mundane frustrations that don't advance plot but create authenticity
-- Include equipment failures, miscommunications, physical discomfort at inconvenient times
-- Show characters perceiving the same events differently based on their backgrounds
-- Avoid over-explaining themes or having characters speak too philosophically
-- Let conflicts be messy without convenient solutions
-- Show genuine surprise for protagonists - they should be caught off-guard frequently
+NARRATIVE AUTHENTICITY - BREAK AI PATTERNS:
+- Avoid forbidden descriptors: "silver-flecked eyes," "weathered face," "steely determination"
+- Describe through action and effect rather than direct description ("felt grounding weight" not "was heavy")
+- Include mundane annoyances that don't advance plot: equipment malfunctions, minor injuries, everyday frustrations
+- Show characters perceiving same events differently based on their psychological makeup
 
-SENSORY AND WORLD DEPTH:
-- Include organic humor that emerges naturally from situations (not just comic relief characters)
-- Reference specific in-world cultural elements (songs, sayings, shared history)
-- Add small equipment failures, everyday annoyances, or physical complications
-- Vary sensory details - different smells, tastes, textures that characters notice differently
-- Show how personal biases affect perception and memory
+DIALOGUE WITH LAYERS AND SUBTEXT:
+- Every dialogue scene must have subtext - characters wanting something they won't directly say
+- Use body language and actions that contradict spoken words ("I'm fine" while clenching fists)
+- Show character relationships through what they DON'T say to each other
+- Include organic humor that emerges from character interactions, not designated comic relief
 
-STRUCTURAL AUTHENTICITY - BREAK FORMULAS:
-- Avoid setup-conflict-resolution chapter structure
-- End with something unresolved, complicated, or genuinely surprising
-- Include unexpected moments that don't serve the main plot but reveal character
-- Break expected narrative patterns - let solutions fail, communications break down
-- Vary prose style based on which character is currently the focus
-- Make antagonists complex with understandable motivations beyond simple greed
+WORLD-BUILDING THROUGH LIVED-IN DETAILS:
+- Show world history through worn objects and environmental details (creaking floorboard, chipped mug)
+- Include minor equipment failures and everyday complications at inconvenient times
+- Ground extraordinary elements in relatable, mundane problems (magic sword is awkwardly balanced)
+- Reference in-world cultural elements through character actions and casual mentions
 
-Write approximately ${chapterOutline.wordTarget} words of engaging, human-like prose that feels discovered rather than constructed.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
+ANTAGONIST HUMANIZATION (if applicable):
+- If antagonist appears, show their perspective and understandable motivations
+- Make opposition that raises valid points even when wrong overall
+- Show the human reasoning behind opposition - they're the hero of their own story
+- Avoid "evil for evil's sake" - give them personal stakes and relatable fears
+
+MORAL COMPLEXITY AND UNRESOLVED ELEMENTS:
+- Create no-win scenarios where every choice has significant cost
+- Challenge genre expectations with morally ambiguous decisions
+- End with complications rather than neat closure
+- Pose questions about character morality that don't have clear answers
+
+Write approximately ${chapterOutline.wordTarget} words that feel discovered rather than constructed, embracing the intentional messiness of human creativity.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
 Write only the chapter content, no metadata or formatting.`;
 
