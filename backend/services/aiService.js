@@ -187,7 +187,7 @@ Create a ${job.targetChapters}-chapter outline for "${job.title}" (${job.genre.r
 PREMISE: ${job.premise}
 WORD COUNT: ${job.targetWordCount} total (~${Math.round(job.targetWordCount / job.targetChapters)} per chapter)
 
-ANALYSIS: ${JSON.stringify(job.analysis, null, 1)}
+ANALYSIS: ${JSON.stringify(job.analysis || {}, null, 1)}
 
 Create exactly ${job.targetChapters} chapters with concise but detailed descriptions.
 
@@ -620,9 +620,9 @@ ${genreInstruction}
 
 ANALYSIS CONTEXT:
 ${job.targetChapters > 20 ? 
-  `Key themes: ${job.analysis.themes?.join(', ') || 'N/A'}
-Main characters: ${job.analysis.characters?.join(', ') || 'N/A'}` :
-  JSON.stringify(job.analysis, null, 1)}
+  `Key themes: ${job.analysis?.themes?.join(', ') || 'N/A'}
+Main characters: ${job.analysis?.characters?.join(', ') || 'N/A'}` :
+  JSON.stringify(job.analysis || {}, null, 1)}
 
 Write the complete chapter with:
 - Engaging prose appropriate to the genre
