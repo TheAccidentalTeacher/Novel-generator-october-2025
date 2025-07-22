@@ -701,47 +701,138 @@ Write only the chapter content, no metadata or formatting.`;
       message: `Resuming chapter generation from chapter ${startFromChapter}...`
     });
     
-    // Generate remaining chapters
     try {
-      // Find chapters that need to be generated
-      const existingChapterNumbers = job.chapters.map(ch => ch.chapterNumber);
-      const chaptersToGenerate = job.outline.filter(outline => 
-        outline.number >= startFromChapter && !existingChapterNumbers.includes(outline.number)
+      // Find failed or incomplete chapters that need to be regenerated
+      const chaptersToRegenerate = job.chapters.filter(ch => 
+        ch.chapterNumber >= startFromChapter && 
+        (ch.status === 'failed' || ch.status === 'pending')
       );
       
-      for (const chapterOutline of chaptersToGenerate) {
-        const chapter = await this.generateChapter(jobId, chapterOutline.number, chapterOutline);
-        job.chapters.push(chapter);
-        job.progress.chaptersCompleted = job.chapters.length;
-        job.progress.lastActivity = new Date();
-        await job.save();
+      let totalTokensUsed = 0;
+      let totalCost = 0;
+      let successCount = 0;
+      let failureCount = 0;
+      
+      for (const chapterSlot of chaptersToRegenerate) {
+        const chapterNumber = chapterSlot.chapterNumber;
+        const chapterOutline = job.outline.find(o => o.chapterNumber === chapterNumber);
+        
+        if (!chapterOutline) {
+          logger.warn(`No outline found for chapter ${chapterNumber}, skipping`);
+          continue;
+        }
         
         emitJobUpdate(jobId, {
           currentPhase: 'chapter_writing',
+          message: `Regenerating chapter ${chapterNumber}...`,
           progress: {
-            chaptersCompleted: job.chapters.length,
+            chaptersCompleted: job.progress.chaptersCompleted || 0,
+            chaptersFailed: job.progress.chaptersFailed || 0,
             totalChapters: job.targetChapters
-          },
-          message: `Chapter ${chapterOutline.number} completed. ${job.chapters.length}/${job.targetChapters} chapters done.`
+          }
         });
-      }
-      
-      // Check if all chapters are complete
-      if (job.chapters.length >= job.targetChapters) {
-        job.status = 'completed';
-        job.currentPhase = 'completed';
+        
+        // Generate the chapter with proper retry logic
+        const chapterResult = await this.generateChapterWithRetry(jobId, chapterNumber, chapterOutline);
+        
+        if (chapterResult.success) {
+          // Update successful chapter in database
+          await this.updateChapterInDatabase(jobId, chapterResult.chapter);
+          
+          totalTokensUsed += chapterResult.chapter.tokensUsed || 0;
+          totalCost += chapterResult.chapter.cost || 0;
+          successCount++;
+          
+          // Update progress counters
+          if (chapterSlot.status === 'failed') {
+            job.progress.chaptersFailed = Math.max(0, (job.progress.chaptersFailed || 0) - 1);
+            // Remove from failed chapters list
+            if (job.progress.failedChapterNumbers) {
+              job.progress.failedChapterNumbers = job.progress.failedChapterNumbers.filter(n => n !== chapterNumber);
+            }
+          }
+          job.progress.chaptersCompleted = (job.progress.chaptersCompleted || 0) + 1;
+          
+          emitJobUpdate(jobId, {
+            currentPhase: 'chapter_writing',
+            progress: {
+              chaptersCompleted: job.progress.chaptersCompleted,
+              chaptersFailed: job.progress.chaptersFailed || 0,
+              totalChapters: job.targetChapters
+            },
+            message: `Chapter ${chapterNumber} regenerated successfully. ${job.progress.chaptersCompleted}/${job.targetChapters} chapters done.`
+          });
+          
+        } else {
+          // Mark as failed again
+          await this.markChapterAsFailed(jobId, chapterNumber, chapterResult.error);
+          failureCount++;
+          
+          emitJobUpdate(jobId, {
+            currentPhase: 'chapter_writing',
+            progress: {
+              chaptersCompleted: job.progress.chaptersCompleted || 0,
+              chaptersFailed: job.progress.chaptersFailed || 0,
+              totalChapters: job.targetChapters
+            },
+            message: `Chapter ${chapterNumber} failed again after ${chapterResult.attempts} attempts.`
+          });
+        }
+        
         await job.save();
         
-        this.activeJobs.delete(jobId);
+        // Small delay between chapters
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Update final status
+      const completedChapters = job.chapters.filter(ch => ch.status === 'completed').length;
+      const failedChapters = job.chapters.filter(ch => ch.status === 'failed').length;
+      
+      job.progress.hasFailures = failedChapters > 0;
+      job.progress.lastActivity = new Date();
+      
+      if (completedChapters === job.targetChapters) {
+        // All chapters completed
+        job.status = 'completed';
+        job.currentPhase = 'completed';
         
         emitJobUpdate(jobId, {
           status: 'completed',
           currentPhase: 'completed',
-          message: 'Novel generation completed successfully!'
+          message: `Novel generation completed successfully! Regenerated ${successCount} chapters.`,
+          progress: job.progress
+        });
+        
+      } else if (completedChapters > 0) {
+        // Partial success
+        job.status = 'completed';
+        job.currentPhase = 'completed';
+        job.error = `Novel completed with ${failedChapters} failed chapters. ${successCount} chapters were successfully regenerated.`;
+        
+        emitJobUpdate(jobId, {
+          status: 'completed',
+          currentPhase: 'completed',
+          message: `Regeneration completed: ${successCount} successful, ${failureCount} failed. ${completedChapters}/${job.targetChapters} total chapters completed.`,
+          progress: job.progress
+        });
+        
+      } else {
+        // Complete failure
+        job.status = 'failed';
+        job.error = `Chapter regeneration failed. No chapters could be completed.`;
+        
+        emitJobUpdate(jobId, {
+          status: 'failed',
+          message: `Chapter regeneration failed for all attempted chapters.`,
+          progress: job.progress
         });
       }
       
-      logger.info(`Completed resuming chapter generation for job ${jobId}`);
+      await job.save();
+      this.activeJobs.delete(jobId);
+      
+      logger.info(`Completed resuming chapter generation for job ${jobId}: ${successCount} successful, ${failureCount} failed`);
       
     } catch (error) {
       await this.handleGenerationError(jobId, error);
