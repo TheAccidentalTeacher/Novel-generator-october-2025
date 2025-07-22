@@ -206,6 +206,7 @@ router.post('/generate',
   checkConcurrentJobs,
   async (req, res) => {
     try {
+      console.log('Received request body:', JSON.stringify(req.body, null, 2));
       const { title, premise, genre, subgenre, targetWordCount, targetChapters } = req.body;
       
       // Additional business logic validation

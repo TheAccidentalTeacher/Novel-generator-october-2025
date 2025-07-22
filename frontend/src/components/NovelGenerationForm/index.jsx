@@ -74,11 +74,13 @@ function NovelGenerationForm() {
       setIsLoading(true);
       setError(null);
       
+      console.log('Form data being submitted:', formData);
       const result = await generateNovel(formData);
       dispatch({ type: 'START_GENERATION', payload: { jobId: result.jobId } });
       navigate(`/progress/${result.jobId}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error starting generation');
+      console.error('Generation error details:', err.response?.data);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Error starting generation');
       setIsLoading(false);
     }
   };
