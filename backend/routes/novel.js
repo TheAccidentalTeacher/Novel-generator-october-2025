@@ -446,7 +446,7 @@ router.get('/download/:jobId',
         subgenre: job.subgenre,
         premise: job.premise,
         chapters: job.chapters.map(chapter => ({
-          number: chapter.number,
+          number: chapter.chapterNumber,
           title: chapter.title,
           content: chapter.content,
           wordCount: chapter.wordCount

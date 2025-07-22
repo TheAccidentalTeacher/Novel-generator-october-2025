@@ -279,7 +279,7 @@ JSON format:
     // Generate chapters sequentially to avoid race conditions
     for (let i = 0; i < job.outline.length; i++) {
       const chapterOutline = job.outline[i];
-      const chapterNumber = chapterOutline.number;
+      const chapterNumber = chapterOutline.chapterNumber || (i + 1); // Fallback to index + 1
       
       try {
         emitJobUpdate(jobId, {
@@ -332,9 +332,9 @@ JSON format:
         // Try to continue with next chapter after error
         totalAttempts++;
         
-        // If too many failures, abort
-        if (totalAttempts > job.targetChapters * 0.5) {
-          throw new Error(`Too many chapter generation failures for job ${jobId}`);
+        // If too many failures, abort - increased threshold for larger novels
+        if (totalAttempts > Math.max(job.targetChapters * 0.75, 15)) {
+          throw new Error(`Too many chapter generation failures for job ${jobId}: ${totalAttempts} failures out of ${i + 1} chapters attempted`);
         }
       }
     }
@@ -376,6 +376,25 @@ JSON format:
   async generateChapter(jobId, chapterNumber, chapterOutline) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
+    
+    // Validate chapter outline structure
+    if (!chapterOutline) {
+      throw new Error(`Chapter outline for chapter ${chapterNumber} is missing`);
+    }
+    
+    if (!chapterOutline.title || !chapterOutline.summary) {
+      throw new Error(`Chapter outline for chapter ${chapterNumber} is incomplete (missing title or summary)`);
+    }
+    
+    if (!chapterOutline.keyEvents || !Array.isArray(chapterOutline.keyEvents)) {
+      logger.warn(`Chapter ${chapterNumber} has invalid keyEvents, using fallback`);
+      chapterOutline.keyEvents = ['Chapter events to be determined'];
+    }
+    
+    if (!chapterOutline.wordTarget || isNaN(chapterOutline.wordTarget)) {
+      logger.warn(`Chapter ${chapterNumber} has invalid wordTarget, using fallback`);
+      chapterOutline.wordTarget = Math.round(job.targetWordCount / job.targetChapters);
+    }
     
     const maxAttempts = 3;
     let attempts = 0;
