@@ -11,9 +11,16 @@ const initializeWebSocket = (server) => {
       methods: ['GET', 'POST'],
       credentials: true
     },
-    pingTimeout: 60000, // 60 seconds
-    pingInterval: 25000, // 25 seconds
-    transports: ['websocket', 'polling']
+    pingTimeout: 120000, // 2 minutes (increased for long generation)
+    pingInterval: 30000, // 30 seconds (more frequent pings)
+    transports: ['websocket', 'polling'],
+    // Railway-specific optimizations
+    allowEIO3: true,
+    maxHttpBufferSize: 1e6, // 1MB buffer
+    connectTimeout: 45000, // 45 seconds connection timeout
+    upgradeTimeout: 30000, // 30 seconds upgrade timeout
+    // Force polling fallback if websocket fails
+    forceJSONP: false
   });
 
   io.on('connection', (socket) => {
@@ -69,8 +76,38 @@ const initializeWebSocket = (server) => {
       socket.emit('pong');
     });
     
+    // Add heartbeat mechanism for long-running processes
+    socket.on('heartbeat', (data) => {
+      const connection = activeConnections.get(socket.id);
+      if (connection) {
+        connection.lastActivity = new Date();
+        // Send heartbeat response
+        socket.emit('heartbeat_ack', { 
+          timestamp: Date.now(),
+          jobId: data?.jobId 
+        });
+      }
+    });
+    
+    // Keep-alive for active generation jobs
+    const heartbeatInterval = setInterval(() => {
+      const connection = activeConnections.get(socket.id);
+      if (connection && connection.subscriptions.size > 0) {
+        socket.emit('keep_alive', { 
+          timestamp: Date.now(),
+          activeJobs: Array.from(connection.subscriptions)
+        });
+      }
+    }, 45000); // Every 45 seconds
+    
+    // Clean up interval on disconnect
     socket.on('disconnect', (reason) => {
       logger.info(`Client ${socket.id} disconnected: ${reason}`);
+      
+      // Clear heartbeat interval
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
       
       // Clean up connection tracking
       const connection = activeConnections.get(socket.id);
