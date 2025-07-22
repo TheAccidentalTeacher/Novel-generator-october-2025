@@ -277,66 +277,88 @@ JSON format:
     let totalAttempts = 0;
     
     // Generate chapters sequentially to avoid race conditions
+    
+    // Initialize chapter slots from outline - this prevents chapter loss
+    await this.initializeChapterSlots(jobId);
+    
     for (let i = 0; i < job.outline.length; i++) {
       const chapterOutline = job.outline[i];
-      const chapterNumber = chapterOutline.chapterNumber || (i + 1); // Fallback to index + 1
+      const chapterNumber = chapterOutline.chapterNumber || (i + 1);
       
-      try {
-        emitJobUpdate(jobId, {
-          currentPhase: 'chapter_writing',
-          message: `Generating chapter ${chapterNumber} of ${job.targetChapters}...`,
-          progress: {
-            chaptersCompleted: i,
-            totalChapters: job.targetChapters
-          }
-        });
-        
-        // Generate the chapter
-        const chapter = await this.generateChapter(jobId, chapterNumber, chapterOutline);
-        
-        // Update job with the new chapter
-        job.chapters.push(chapter);
-        job.progress.chaptersCompleted = job.chapters.length;
-        job.progress.lastActivity = new Date();
-        
-        // Update token usage and cost
-        totalTokensUsed += chapter.tokensUsed || 0;
-        totalCost += chapter.cost || 0;
-        totalAttempts += chapter.attempts || 1;
-        
-        // Calculate estimated completion time
-        const timePerChapter = (Date.now() - chapterGenerationStart) / job.chapters.length;
-        const chaptersRemaining = job.targetChapters - job.chapters.length;
-        const estimatedTimeRemaining = timePerChapter * chaptersRemaining;
-        job.progress.estimatedCompletion = new Date(Date.now() + estimatedTimeRemaining);
-        
-        // Save after each chapter to prevent data loss
-        await job.save();
-        
-        // Small delay to prevent MongoDB race conditions
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        emitJobUpdate(jobId, {
-          currentPhase: 'chapter_writing',
-          progress: {
-            chaptersCompleted: job.chapters.length,
-            totalChapters: job.targetChapters,
-            estimatedCompletion: job.progress.estimatedCompletion
-          },
-          message: `Chapter ${chapterNumber} completed. ${job.chapters.length}/${job.targetChapters} chapters done.`
-        });
-        
-      } catch (error) {
-        logger.error(`Error generating chapter ${chapterNumber} for job ${jobId}:`, error);
-        
-        // Try to continue with next chapter after error
-        totalAttempts++;
-        
-        // If too many failures, abort - increased threshold for larger novels
-        if (totalAttempts > Math.max(job.targetChapters * 0.75, 15)) {
-          throw new Error(`Too many chapter generation failures for job ${jobId}: ${totalAttempts} failures out of ${i + 1} chapters attempted`);
+      emitJobUpdate(jobId, {
+        currentPhase: 'chapter_writing',
+        message: `Generating chapter ${chapterNumber} of ${job.targetChapters}...`,
+        progress: {
+          chaptersCompleted: job.progress.chaptersCompleted,
+          chaptersFailed: job.progress.chaptersFailed || 0,
+          totalChapters: job.targetChapters
         }
+      });
+      
+      // Generate the chapter with proper retry logic
+      const chapterResult = await this.generateChapterWithRetry(jobId, chapterNumber, chapterOutline);
+      
+      if (chapterResult.success) {
+        // Update successful chapter in database
+        await this.updateChapterInDatabase(jobId, chapterResult.chapter);
+        
+        // Update counters
+        totalTokensUsed += chapterResult.chapter.tokensUsed || 0;
+        totalCost += chapterResult.chapter.cost || 0;
+        totalAttempts += chapterResult.chapter.attempts || 1;
+        
+        // Update progress
+        job.progress.chaptersCompleted++;
+        
+        emitJobUpdate(jobId, {
+          currentPhase: 'chapter_writing',
+          progress: {
+            chaptersCompleted: job.progress.chaptersCompleted,
+            chaptersFailed: job.progress.chaptersFailed || 0,
+            totalChapters: job.targetChapters
+          },
+          message: `Chapter ${chapterNumber} completed. ${job.progress.chaptersCompleted}/${job.targetChapters} chapters done.`
+        });
+        
+      } else {
+        // Mark chapter as failed
+        await this.markChapterAsFailed(jobId, chapterNumber, chapterResult.error);
+        job.progress.chaptersFailed = (job.progress.chaptersFailed || 0) + 1;
+        job.progress.hasFailures = true;
+        if (!job.progress.failedChapterNumbers) job.progress.failedChapterNumbers = [];
+        if (!job.progress.failedChapterNumbers.includes(chapterNumber)) {
+          job.progress.failedChapterNumbers.push(chapterNumber);
+        }
+        
+        const statusMessage = `Chapter ${chapterNumber} failed after ${chapterResult.attempts} attempts. ${job.progress.chaptersFailed} chapters failed.`;
+        
+        emitJobUpdate(jobId, {
+          currentPhase: 'chapter_writing',
+          progress: {
+            chaptersCompleted: job.progress.chaptersCompleted,
+            chaptersFailed: job.progress.chaptersFailed,
+            totalChapters: job.targetChapters,
+            hasFailures: job.progress.hasFailures,
+            failedChapterNumbers: job.progress.failedChapterNumbers
+          },
+          message: statusMessage
+        });
+        
+        logger.warn(`Chapter ${chapterNumber} failed for job ${jobId}: ${chapterResult.error}`);
       }
+      
+      // Calculate estimated completion time
+      const timePerChapter = (Date.now() - chapterGenerationStart) / (i + 1);
+      const chaptersRemaining = job.targetChapters - (i + 1);
+      const estimatedTimeRemaining = timePerChapter * chaptersRemaining;
+      job.progress.estimatedCompletion = new Date(Date.now() + estimatedTimeRemaining);
+      job.progress.lastActivity = new Date();
+      
+      // Save progress after each chapter
+      await job.save();
+      
+      // Small delay to prevent MongoDB race conditions
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     // Update job with final chapter generation stats
@@ -350,13 +372,58 @@ JSON format:
     
     // Calculate quality metrics
     if (job.chapters.length > 0) {
-      const averageChapterLength = job.chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0) / job.chapters.length;
-      const totalWordCount = job.chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0);
+      const completedChapters = job.chapters.filter(ch => ch.status === 'completed');
+      const successfulChapters = job.progress.chaptersCompleted || 0;
+      const failedChapters = job.progress.chaptersFailed || 0;
       
+      if (completedChapters.length > 0) {
+        const averageChapterLength = completedChapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0) / completedChapters.length;
+        const totalWordCount = completedChapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0);
+        
+        job.qualityMetrics = {
+          averageChapterLength: Math.round(averageChapterLength),
+          totalWordCount: totalWordCount,
+          targetAccuracy: Math.round((totalWordCount / job.targetWordCount) * 100),
+          chaptersCompleted: successfulChapters,
+          chaptersFailed: failedChapters,
+          completionRate: Math.round((successfulChapters / job.targetChapters) * 100),
+          hasFailures: job.progress.hasFailures || false,
+          failedChapters: job.progress.failedChapterNumbers || []
+        };
+      }
+      
+      // Determine final status
+      if (successfulChapters === 0) {
+        // Complete failure
+        job.status = 'failed';
+        job.error = `All chapter generation failed. ${failedChapters} chapters could not be generated.`;
+      } else if (successfulChapters === job.targetChapters) {
+        // Complete success
+        job.status = 'completed';
+        job.currentPhase = 'completed';
+      } else {
+        // Partial success - mark as completed with warnings
+        job.status = 'completed';
+        job.currentPhase = 'completed';
+        job.error = `Novel completed with ${failedChapters} failed chapters. Chapters ${(job.progress.failedChapterNumbers || []).join(', ')} need to be regenerated.`;
+      }
+      
+      // Emit final status with detailed information
+      const finalMessage = successfulChapters === job.targetChapters 
+        ? 'Novel generation completed successfully!'
+        : `Novel completed with ${successfulChapters}/${job.targetChapters} chapters. ${failedChapters} chapters failed and can be retried.`;
+      
+      emitJobUpdate(jobId, {
+        status: job.status,
+        currentPhase: job.currentPhase,
+        progress: job.progress,
+        message: finalMessage,
+        qualityMetrics: job.qualityMetrics
+      });
+      
+      logger.info(`Completed chapter generation for job ${jobId}: ${successfulChapters} successful, ${failedChapters} failed`);
+    } else {
       job.qualityMetrics = {
-        averageChapterLength: Math.round(averageChapterLength),
-        totalWordCount: totalWordCount,
-        targetAccuracy: Math.round((totalWordCount / job.targetWordCount) * 100),
         chaptersCompleted: job.chapters.length,
         completionRate: Math.round((job.chapters.length / job.targetChapters) * 100)
       };
@@ -372,8 +439,133 @@ JSON format:
     
     logger.info(`Completed generating all chapters for job ${jobId}`);
   }
-  
-  async generateChapter(jobId, chapterNumber, chapterOutline) {
+
+  // Initialize chapter slots to prevent loss - creates placeholder entries for all chapters
+  async initializeChapterSlots(jobId) {
+    const job = await Job.findById(jobId);
+    if (!job) throw new Error(`Job ${jobId} not found`);
+    
+    // Clear existing chapters and create placeholders for all chapters
+    job.chapters = [];
+    
+    for (let i = 0; i < job.outline.length; i++) {
+      const chapterOutline = job.outline[i];
+      const chapterNumber = chapterOutline.chapterNumber || (i + 1);
+      
+      // Create placeholder chapter
+      const placeholderChapter = {
+        chapterNumber: chapterNumber,
+        title: chapterOutline.title,
+        status: 'pending',
+        attempts: 0,
+        content: null,
+        wordCount: null
+      };
+      
+      job.chapters.push(placeholderChapter);
+    }
+    
+    await job.save();
+    logger.info(`Initialized ${job.chapters.length} chapter slots for job ${jobId}`);
+  }
+
+  // Enhanced chapter generation with proper error handling
+  async generateChapterWithRetry(jobId, chapterNumber, chapterOutline) {
+    const maxAttempts = 3;
+    let attempts = 0;
+    let lastError = null;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      
+      try {
+        // Update chapter status to 'generating'
+        await this.updateChapterStatus(jobId, chapterNumber, 'generating', attempts);
+        
+        const chapter = await this.generateSingleChapter(jobId, chapterNumber, chapterOutline, attempts);
+        
+        // Mark as completed
+        chapter.status = 'completed';
+        chapter.attempts = attempts;
+        
+        return {
+          success: true,
+          chapter: chapter,
+          attempts: attempts
+        };
+        
+      } catch (error) {
+        lastError = error;
+        logger.error(`Attempt ${attempts} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
+        
+        // Update chapter with failure info
+        await this.updateChapterStatus(jobId, chapterNumber, 'generating', attempts, error.message);
+        
+        if (attempts >= maxAttempts) {
+          break;
+        }
+        
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
+      }
+    }
+    
+    // All attempts failed
+    await this.updateChapterStatus(jobId, chapterNumber, 'failed', attempts, lastError.message);
+    
+    return {
+      success: false,
+      error: lastError.message,
+      attempts: attempts
+    };
+  }
+
+  // Update chapter status in database
+  async updateChapterStatus(jobId, chapterNumber, status, attempts, failureReason = null) {
+    const job = await Job.findById(jobId);
+    if (!job) return;
+    
+    const chapterIndex = job.chapters.findIndex(ch => ch.chapterNumber === chapterNumber);
+    if (chapterIndex >= 0) {
+      job.chapters[chapterIndex].status = status;
+      job.chapters[chapterIndex].attempts = attempts;
+      job.chapters[chapterIndex].lastAttemptAt = new Date();
+      if (failureReason) {
+        job.chapters[chapterIndex].failureReason = failureReason;
+      }
+      await job.save();
+    }
+  }
+
+  // Update completed chapter in database
+  async updateChapterInDatabase(jobId, chapter) {
+    const job = await Job.findById(jobId);
+    if (!job) return;
+    
+    const chapterIndex = job.chapters.findIndex(ch => ch.chapterNumber === chapter.chapterNumber);
+    if (chapterIndex >= 0) {
+      job.chapters[chapterIndex] = chapter;
+      await job.save();
+    }
+  }
+
+  // Mark chapter as failed with proper tracking
+  async markChapterAsFailed(jobId, chapterNumber, errorMessage) {
+    const job = await Job.findById(jobId);
+    if (!job) return;
+    
+    const chapterIndex = job.chapters.findIndex(ch => ch.chapterNumber === chapterNumber);
+    if (chapterIndex >= 0) {
+      job.chapters[chapterIndex].status = 'failed';
+      job.chapters[chapterIndex].failureReason = errorMessage;
+      job.chapters[chapterIndex].lastAttemptAt = new Date();
+    }
+    
+    await job.save();
+  }
+
+  // Renamed from generateChapter to be more specific
+  async generateSingleChapter(jobId, chapterNumber, chapterOutline, attempts = 1) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
     

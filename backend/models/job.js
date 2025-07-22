@@ -46,12 +46,24 @@ const chapterSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true
+    required: function() { return this.status === 'completed'; } // Only required for completed chapters
   },
   wordCount: {
     type: Number,
+    required: function() { return this.status === 'completed'; }
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'generating', 'completed', 'failed'],
+    default: 'pending',
     required: true
   },
+  attempts: {
+    type: Number,
+    default: 0
+  },
+  lastAttemptAt: Date,
+  failureReason: String,
   qualityScore: {
     type: Number,
     default: 0
@@ -61,8 +73,7 @@ const chapterSchema = new mongoose.Schema({
     default: Date.now
   },
   tokensUsed: Number,
-  cost: Number,
-  attempts: Number
+  cost: Number
 });
 
 const jobSchema = new mongoose.Schema({
@@ -141,9 +152,20 @@ const jobSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
+    chaptersFailed: {
+      type: Number,
+      default: 0
+    },
     totalChapters: {
       type: Number,
       required: true
+    },
+    failedChapterNumbers: [{
+      type: Number
+    }],
+    hasFailures: {
+      type: Boolean,
+      default: false
     },
     estimatedCompletion: Date,
     lastActivity: {

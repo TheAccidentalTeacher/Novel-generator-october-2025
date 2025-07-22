@@ -397,6 +397,16 @@ router.get('/status/:jobId',
         response.qualityMetrics = job.qualityMetrics;
       }
       
+      // Include failure information if present
+      if (job.progress.hasFailures) {
+        response.failures = {
+          hasFailures: true,
+          failedCount: job.progress.chaptersFailed || 0,
+          failedChapters: job.progress.failedChapterNumbers || [],
+          canRetry: true
+        };
+      }
+      
       res.json(response);
       
     } catch (error) {
@@ -436,8 +446,25 @@ router.get('/download/:jobId',
         });
       }
       
-      // Calculate total word count
-      const totalWordCount = job.chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0);
+      // Calculate total word count from completed chapters only
+      const completedChapters = job.chapters.filter(ch => ch.status === 'completed');
+      const totalWordCount = completedChapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0);
+      
+      // Separate completed and failed chapters for the response
+      const completedChapterData = completedChapters.map(chapter => ({
+        number: chapter.chapterNumber,
+        title: chapter.title,
+        content: chapter.content,
+        wordCount: chapter.wordCount
+      }));
+      
+      const failedChapters = job.chapters.filter(ch => ch.status === 'failed').map(chapter => ({
+        number: chapter.chapterNumber,
+        title: chapter.title,
+        failureReason: chapter.failureReason,
+        attempts: chapter.attempts,
+        lastAttemptAt: chapter.lastAttemptAt
+      }));
       
       const novelData = {
         id: job._id,
@@ -445,16 +472,19 @@ router.get('/download/:jobId',
         genre: job.genre,
         subgenre: job.subgenre,
         premise: job.premise,
-        chapters: job.chapters.map(chapter => ({
-          number: chapter.chapterNumber,
-          title: chapter.title,
-          content: chapter.content,
-          wordCount: chapter.wordCount
-        })),
+        chapters: completedChapterData,
+        failedChapters: failedChapters,
         wordCount: totalWordCount,
         targetWordCount: job.targetWordCount,
         completedAt: job.progress.lastActivity,
-        qualityMetrics: job.qualityMetrics || null
+        qualityMetrics: job.qualityMetrics || null,
+        hasFailures: job.progress.hasFailures || false,
+        completionStats: {
+          completed: completedChapters.length,
+          failed: failedChapters.length,
+          total: job.targetChapters,
+          completionRate: Math.round((completedChapters.length / job.targetChapters) * 100)
+        }
       };
       
       res.json(novelData);
@@ -528,6 +558,125 @@ router.delete('/:jobId',
     } catch (error) {
       logger.error('Error deleting job:', error);
       res.status(500).json({ error: 'Failed to delete job' });
+    }
+  }
+);
+
+// POST /api/novel/retry/:jobId - Retry failed chapters
+router.post('/retry/:jobId',
+  generalRateLimit,
+  validateJobId,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { chapterNumbers } = req.body; // Optional: specific chapters to retry
+      
+      const job = await Job.findById(jobId);
+      
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+      
+      // Check if job has failed chapters
+      const failedChapters = job.chapters.filter(ch => ch.status === 'failed');
+      
+      if (failedChapters.length === 0) {
+        return res.status(400).json({
+          error: 'No failed chapters',
+          message: 'This job has no failed chapters to retry'
+        });
+      }
+      
+      // Check if job is currently processing
+      if (['planning', 'outlining', 'writing'].includes(job.status)) {
+        return res.status(400).json({
+          error: 'Job is active',
+          message: 'Cannot retry chapters while job is still processing'
+        });
+      }
+      
+      // Filter chapters to retry
+      let chaptersToRetry = failedChapters;
+      if (chapterNumbers && Array.isArray(chapterNumbers)) {
+        chaptersToRetry = failedChapters.filter(ch => chapterNumbers.includes(ch.chapterNumber));
+        
+        if (chaptersToRetry.length === 0) {
+          return res.status(400).json({
+            error: 'No matching failed chapters',
+            message: 'None of the specified chapters are in failed status'
+          });
+        }
+      }
+      
+      // Start retry process asynchronously
+      const startFromChapter = Math.min(...chaptersToRetry.map(ch => ch.chapterNumber));
+      
+      setImmediate(() => {
+        aiService.resumeChapterGeneration(jobId, startFromChapter).catch(error => {
+          logger.error(`Chapter retry failed for job ${jobId}:`, error);
+        });
+      });
+      
+      logger.info(`Started chapter retry for job ${jobId}, chapters: ${chaptersToRetry.map(ch => ch.chapterNumber).join(', ')}`);
+      
+      res.json({
+        message: 'Chapter retry started',
+        chaptersToRetry: chaptersToRetry.length,
+        chapterNumbers: chaptersToRetry.map(ch => ch.chapterNumber),
+        estimatedTime: Math.round(chaptersToRetry.length * 3) + ' minutes'
+      });
+      
+    } catch (error) {
+      logger.error('Error starting chapter retry:', error);
+      res.status(500).json({ error: 'Failed to start chapter retry' });
+    }
+  }
+);
+
+// GET /api/novel/failures/:jobId - Get detailed information about failed chapters
+router.get('/failures/:jobId',
+  generalRateLimit,
+  validateJobId,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      
+      const job = await Job.findById(jobId).select('title chapters progress qualityMetrics');
+      
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+      
+      const failedChapters = job.chapters.filter(ch => ch.status === 'failed');
+      const completedChapters = job.chapters.filter(ch => ch.status === 'completed');
+      
+      const failureDetails = failedChapters.map(chapter => ({
+        chapterNumber: chapter.chapterNumber,
+        title: chapter.title,
+        status: chapter.status,
+        attempts: chapter.attempts,
+        failureReason: chapter.failureReason,
+        lastAttemptAt: chapter.lastAttemptAt
+      }));
+      
+      res.json({
+        jobId: job._id,
+        title: job.title,
+        failedChapters: failureDetails,
+        summary: {
+          totalChapters: job.chapters.length,
+          completed: completedChapters.length,
+          failed: failedChapters.length,
+          canRetry: failedChapters.length > 0,
+          completionRate: Math.round((completedChapters.length / job.chapters.length) * 100)
+        }
+      });
+      
+    } catch (error) {
+      logger.error('Error fetching failure details:', error);
+      res.status(500).json({ error: 'Failed to fetch failure details' });
     }
   }
 );
