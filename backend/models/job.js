@@ -86,7 +86,7 @@ const jobSchema = new mongoose.Schema({
   },
   currentPhase: {
     type: String,
-    enum: ['premise_analysis', 'outline_generation', 'chapter_writing', 'quality_validation', 'finalization'],
+    enum: ['premise_analysis', 'outline_generation', 'chapter_writing', 'quality_validation', 'finalization', 'completed'],
     default: 'premise_analysis',
     required: true
   },

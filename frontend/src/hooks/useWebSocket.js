@@ -17,7 +17,9 @@ export function useWebSocket(jobId) {
       const socketURL = import.meta.env.VITE_API_BASE_URL || window.location.origin;
       socket.current = io(socketURL, {
         reconnectionAttempts: 5,
-        timeout: 20000
+        timeout: 20000,
+        forceNew: true,
+        transports: ['websocket', 'polling']
       });
       
       socket.current.on('connect', () => {
@@ -57,13 +59,20 @@ export function useWebSocket(jobId) {
       
       // Handle job updates
       socket.current.on('job-update', (data) => {
-        // Process job updates without console logging in production
-        dispatch({ type: 'UPDATE_PROGRESS', payload: data });
-        
-        if (data.status === 'completed') {
-          dispatch({ type: 'GENERATION_COMPLETE', payload: data });
-        } else if (data.status === 'failed') {
-          dispatch({ type: 'GENERATION_ERROR', payload: data.message || 'Generation failed' });
+        try {
+          // Process job updates without console logging in production
+          dispatch({ type: 'UPDATE_PROGRESS', payload: data });
+          
+          if (data.status === 'completed') {
+            dispatch({ type: 'GENERATION_COMPLETE', payload: data });
+          } else if (data.status === 'failed') {
+            dispatch({ type: 'GENERATION_ERROR', payload: data.message || 'Generation failed' });
+          }
+        } catch (error) {
+          // Silently handle dispatch errors to prevent uncaught exceptions
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Error processing job update:', error);
+          }
         }
       });
     };

@@ -15,7 +15,10 @@ const api = axios.create({
 api.interceptors.response.use(
   response => response,
   error => {
-    console.error('API Error:', error.response || error);
+    // Only log in development mode
+    if (import.meta.env.DEV) {
+      console.error('API Error:', error.response || error);
+    }
     return Promise.reject(error);
   }
 );
