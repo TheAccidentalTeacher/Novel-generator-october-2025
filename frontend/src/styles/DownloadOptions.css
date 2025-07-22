@@ -28,6 +28,15 @@
   background-color: var(--primary-dark);
 }
 
+.docx-button {
+  background-color: #0078d4 !important;
+  color: white;
+}
+
+.docx-button:hover:not(:disabled) {
+  background-color: #106ebe !important;
+}
+
 @media (max-width: 768px) {
   .download-options .buttons {
     flex-direction: column;
