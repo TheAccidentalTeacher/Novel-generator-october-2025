@@ -153,6 +153,14 @@ After each stage, the system checks:
 - Does dialogue have subtext?
 - Are there unresolved elements?
 
+### Continuity Guardian (Advanced Quality Control):
+**When enabled, the AI performs real-time continuity checking:**
+- **Character Consistency**: Does this match what we know about this character?
+- **Plot Thread Tracking**: Are we following through on introduced elements?
+- **Timeline Coherence**: Do events happen in logical sequence?
+- **Foreshadowing Check**: Are major reveals properly set up earlier?
+- **Detail Consistency**: Do physical descriptions, locations, and facts match previous chapters?
+
 ---
 
 ## The Magic Ingredients (What Makes It Human)
@@ -214,6 +222,35 @@ Instead of tying up every loose end, we leave some questions unanswered and some
 **What happened**: Large novels require lots of AI processing  
 **Why**: Each chapter is generated individually with all the human-like complexity  
 **Solution**: This is normal for sophisticated novels - grab some coffee!
+
+### Minor continuity issues in completed novel
+**What happened**: Small inconsistencies like character details, timeline gaps, or unfollowed plot threads  
+**Why**: AI doesn't always track all details across many chapters  
+**Solution**: 
+- Enable "Continuity Guardian" mode for future generations
+- Use targeted chapter regeneration for specific problem areas
+- Generate "bridge scenes" to fill continuity gaps without rewriting entire chapters
+
+---
+
+## Advanced Features
+
+### Continuity Guardian Mode
+**When to use**: For proof-of-concept novels or when perfection is critical  
+**What it does**: Adds real-time continuity checking during generation  
+**How it works**: 
+- AI maintains a "story bible" of established facts
+- Each chapter is cross-referenced against previous chapters
+- Automatic flagging of potential inconsistencies
+- Suggests fixes during generation rather than after completion
+
+### Targeted Chapter Regeneration
+**When to use**: When specific chapters have continuity issues  
+**What it does**: Regenerates only problematic chapters while maintaining overall story flow  
+**How it works**:
+- Identify the specific continuity issue
+- Regenerate that chapter with explicit continuity instructions
+- Maintain connections to surrounding chapters
 
 ---
 

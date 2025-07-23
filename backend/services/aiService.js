@@ -6,6 +6,7 @@ const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
+const ContinuityGuardian = require('../shared/continuityGuardian');
 
 class AIService {
   constructor() {
@@ -18,6 +19,9 @@ class AIService {
     });
     
     this.activeJobs = new Map();
+    
+    // Initialize Continuity Guardian for advanced quality control
+    this.continuityGuardian = new ContinuityGuardian();
     
     // Cost tracking per model (prices as of 2024)
     // Model limits: gpt-4o/gpt-4o-mini context: 128K tokens, output: 16K tokens
@@ -658,6 +662,18 @@ JSON format:
       chapterOutline.wordTarget = Math.min(chapterOutline.wordTarget, 8000);
     }
     
+    // Generate continuity checking prompt if enabled
+    let continuityPrompt = '';
+    if (job.humanLikeWriting && job.continuityGuardian !== false) {
+      try {
+        const previousChapters = job.chapters.slice(0, chapterNumber - 1);
+        continuityPrompt = this.continuityGuardian.generateContinuityPrompt(chapterOutline, previousChapters);
+      } catch (error) {
+        logger.warn(`Continuity Guardian error for chapter ${chapterNumber}: ${error.message}`);
+        // Continue without continuity checking rather than fail
+      }
+    }
+    
     const maxRetries = 3;
     let retryCount = 0;
     
@@ -672,6 +688,8 @@ JSON format:
         
         const chapterPrompt = `
 Write Chapter ${chapterNumber} of the novel "${job.title}".
+
+${continuityPrompt}
 
 CHAPTER OUTLINE:
 Title: ${chapterOutline.title}
@@ -749,6 +767,27 @@ Write only the chapter content, no metadata or formatting.`;
         const chapterContent = response.choices[0].message.content.trim();
         const wordCount = this.countWords(chapterContent);
         
+        // Validate continuity if enabled
+        let continuityValidation = { isValid: true, issues: [], suggestions: [] };
+        if (job.humanLikeWriting && job.continuityGuardian !== false) {
+          try {
+            continuityValidation = this.continuityGuardian.validateChapter(chapterContent, chapterNumber);
+            if (!continuityValidation.isValid) {
+              logger.warn(`Continuity issues detected in chapter ${chapterNumber}:`, continuityValidation.issues);
+              
+              // For proof-of-concept mode, we could retry with specific instructions
+              // For now, we log and continue but mark the issues
+            }
+            
+            // Update story bible with this chapter's information
+            const chapterAnalysis = this.continuityGuardian.analyzeChapter(chapterContent, chapterNumber);
+            this.continuityGuardian.updateStoryBible(chapterAnalysis, chapterNumber);
+          } catch (error) {
+            logger.warn(`Continuity validation error for chapter ${chapterNumber}: ${error.message}`);
+            // Continue without validation rather than fail
+          }
+        }
+        
         // Calculate cost
         const cost = this.calculateCost(
           'gpt-4o',
@@ -765,7 +804,8 @@ Write only the chapter content, no metadata or formatting.`;
           tokensUsed: response.usage.total_tokens,
           cost: cost,
           attempts: attempts, // This is the parameter passed to the function
-          generationTime: Date.now() - chapterStart
+          generationTime: Date.now() - chapterStart,
+          continuityCheck: continuityValidation // Include continuity validation results
         };
         
         logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words, attempt ${retryCount})`);
