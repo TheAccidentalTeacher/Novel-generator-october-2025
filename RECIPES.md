@@ -133,6 +133,12 @@ Complete chapters that feel like a human wrote them, with:
 - **Outline**: Takes longer, more complex thinking required
 - **Chapters**: Takes the longest, uses the most powerful AI, goes one by one
 
+### Kitchen Limitations (AI Hard Limits):
+- **Maximum Chapter Size**: About 8,000 words per chapter (AI model limit)
+- **Maximum Outline Size**: About 40 chapters before quality decreases
+- **Token Limits**: AI can only "think" so many words at once (like RAM in a computer)
+- **Workaround**: System automatically caps sizes and warns when approaching limits
+
 ### Quality Control:
 After each stage, the system checks:
 - Did we avoid forbidden phrases?
@@ -176,6 +182,28 @@ Instead of tying up every loose end, we leave some questions unanswered and some
 - Uses all three recipe books
 - Gets sophisticated, complex narratives
 - Stories that feel genuinely human-written
+
+---
+
+## Troubleshooting Common Issues
+
+### "Generation Error: max_tokens is too large"
+**What happened**: You tried to generate something bigger than the AI can handle  
+**Why**: AI models have hard limits (like trying to fit a gallon in a quart container)  
+**Solution**: 
+- Try fewer chapters (under 40)
+- Reduce target word count per chapter (under 8,000 words)
+- The system now automatically prevents this
+
+### "Outline generation failed"
+**What happened**: The outline was too complex for the AI to create  
+**Why**: Too many chapters or too much detail requested  
+**Solution**: Break large novels into smaller books or reduce chapter count
+
+### Generation takes a very long time
+**What happened**: Large novels require lots of AI processing  
+**Why**: Each chapter is generated individually with all the human-like complexity  
+**Solution**: This is normal for sophisticated novels - grab some coffee!
 
 ---
 

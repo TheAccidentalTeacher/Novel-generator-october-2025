@@ -194,6 +194,14 @@ Respond in JSON format:
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
     
+    // Check for potential token limit issues with large outlines
+    if (job.targetChapters > 40) {
+      logger.warn(`Large outline requested: ${job.targetChapters} chapters. May hit token limits.`);
+      emitJobUpdate(jobId, {
+        message: `Generating large outline (${job.targetChapters} chapters). This may take longer and be less detailed per chapter.`
+      });
+    }
+    
     job.status = 'outlining';
     job.currentPhase = 'outline_generation';
     job.progress.lastActivity = new Date();
@@ -266,7 +274,7 @@ JSON format:
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: outlinePrompt }],
         temperature: 0.4,
-        max_tokens: Math.max(16000, job.targetChapters * 400) // No arbitrary upper limit, scale with needs
+        max_tokens: Math.min(16000, Math.max(8000, job.targetChapters * 300)) // Respect OpenAI's 16K token limit
       });
       
       const outlineResult = this.extractJSON(response.choices[0].message.content);
@@ -643,6 +651,13 @@ JSON format:
       chapterOutline.wordTarget = Math.round(job.targetWordCount / job.targetChapters);
     }
     
+    // Check for very large chapters that might hit token limits
+    if (chapterOutline.wordTarget > 8000) {
+      logger.warn(`Very large chapter ${chapterNumber} requested: ${chapterOutline.wordTarget} words. May hit token limits.`);
+      // Cap at 8000 words to avoid token limit issues
+      chapterOutline.wordTarget = Math.min(chapterOutline.wordTarget, 8000);
+    }
+    
     const maxRetries = 3;
     let retryCount = 0;
     
@@ -728,7 +743,7 @@ Write only the chapter content, no metadata or formatting.`;
           model: 'gpt-4o',
           messages: [{ role: 'user', content: chapterPrompt }],
           temperature: 0.7,
-          max_tokens: Math.max(4000, Math.round(chapterOutline.wordTarget * 1.8)) // Higher multiplier for richer content
+          max_tokens: Math.min(16000, Math.max(4000, Math.round(chapterOutline.wordTarget * 1.6))) // Respect 16K limit, reduce multiplier
         });
         
         const chapterContent = response.choices[0].message.content.trim();
