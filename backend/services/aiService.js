@@ -5,6 +5,7 @@ const { emitJobUpdate } = require('../websocket');
 const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
+const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
 
 class AIService {
   constructor() {
@@ -116,6 +117,8 @@ ${job.humanLikeWriting ? humanWritingEnhancements.prompts.analysis.humanLikeAddi
 
 ${job.humanLikeWriting ? universalFramework.promptEnhancements.analysis : ''}
 
+${job.humanLikeWriting ? advancedRefinements.level5Prompts.analysis : ''}
+
 Please provide a comprehensive analysis that prioritizes ${job.humanLikeWriting ? 'authentic, human-like storytelling' : 'engaging storytelling'}:
 
 ANALYSIS REQUIREMENTS:
@@ -216,6 +219,8 @@ ANALYSIS: ${JSON.stringify(job.analysis || {}, null, 1)}
 ${job.humanLikeWriting ? humanWritingEnhancements.prompts.outline.humanLikeAdditions : ''}
 
 ${job.humanLikeWriting ? universalFramework.promptEnhancements.outline : ''}
+
+${job.humanLikeWriting ? advancedRefinements.level5Prompts.outline : ''}
 
 ${job.humanLikeWriting ? `HUMAN-LIKE OUTLINE REQUIREMENTS:
 - Create significant variation in chapter lengths (some 800 words, others 3000+ words)
@@ -680,45 +685,42 @@ ${job.humanLikeWriting ? humanWritingEnhancements.prompts.chapter.humanLikeAddit
 
 ${job.humanLikeWriting ? universalFramework.promptEnhancements.chapter : ''}
 
-${job.humanLikeWriting ? `UNIVERSAL FRAMEWORK IMPLEMENTATION FOR THIS CHAPTER:
+${job.humanLikeWriting ? advancedRefinements.level5Prompts.chapter : ''}
 
-CHARACTER FALLIBILITY IN ACTION:
-- Show characters making decisions driven by their core psychological flaws (avoid repetitive trait descriptions)
-- Include meaningful failures that have real, lasting consequences beyond this chapter
-- Let character strengths become weaknesses when taken to extremes or under pressure
-- Show genuine interpersonal friction that doesn't resolve easily
+${job.humanLikeWriting ? `LEVEL 5 ADVANCED HUMAN AUTHENTICITY IMPLEMENTATION:
 
-NARRATIVE AUTHENTICITY - BREAK AI PATTERNS:
-- Avoid forbidden descriptors: "silver-flecked eyes," "weathered face," "steely determination"
-- Describe through action and effect rather than direct description ("felt grounding weight" not "was heavy")
-- Include mundane annoyances that don't advance plot: equipment malfunctions, minor injuries, everyday frustrations
-- Show characters perceiving same events differently based on their psychological makeup
+FACTION BREAKING POINT - INTERNAL CONFLICTS WITH CONSEQUENCES:
+- Show ally factions sabotaging protagonist's plans from genuine good intentions (no clear villains)
+- Force leader into choice between authoritarian control and collaborative risk with lasting consequences
+- Make internal division as dangerous as external threats - competing survival needs drive conflict
+- Create "hard choice" scenarios where every option creates lasting community division
 
-DIALOGUE WITH LAYERS AND SUBTEXT:
-- Every dialogue scene must have subtext - characters wanting something they won't directly say
-- Use body language and actions that contradict spoken words ("I'm fine" while clenching fists)
-- Show character relationships through what they DON'T say to each other
-- Include organic humor that emerges from character interactions, not designated comic relief
+POWER COST ENFORCEMENT - MEANINGFUL LIMITATIONS:
+- After significant ability use, show character suffering real biological/psychological costs (memory loss, exhaustion, vulnerability)
+- Include empathetic feedback where protector characters physically/emotionally feel pain when their charges suffer
+- Create recovery periods where powerful characters are dependent on others and cannot use abilities
+- Never let powers solve problems without exacting meaningful prices that affect story progression
 
-WORLD-BUILDING THROUGH LIVED-IN DETAILS:
-- Show world history through worn objects and environmental details (creaking floorboard, chipped mug)
-- Include minor equipment failures and everyday complications at inconvenient times
-- Ground extraordinary elements in relatable, mundane problems (magic sword is awkwardly balanced)
-- Reference in-world cultural elements through character actions and casual mentions
+STRUCTURAL SUBVERSION - BREAK ESTABLISHED PATTERNS:
+- Avoid repetitive meeting/discussion locations (break cantina meeting pattern if established)
+- Include critical decision made by isolated character with no time for group consultation
+- Show how small character weakness or overlooked detail catastrophically derails simple plans
+- Create genuine surprise that feels inevitable once revealed - subvert reader expectations intelligently
 
-ANTAGONIST HUMANIZATION (if applicable):
-- If antagonist appears, show their perspective and understandable motivations
-- Make opposition that raises valid points even when wrong overall
-- Show the human reasoning behind opposition - they're the hero of their own story
-- Avoid "evil for evil's sake" - give them personal stakes and relatable fears
+ACTIVE PROSE CONSTRAINTS - FORBIDDEN PHRASE ENFORCEMENT:
+- ABSOLUTELY FORBIDDEN: "silver-flecked eyes," "copper-plated exosuit," "vibrant hair," "living suit," "multi-tool gauntlet," "weathered face," "steely determination," "nanite cloak," "luminescent ink"
+- Describe characters/equipment through action and environmental effect: "weight settled across shoulders" not "heavy exosuit"
+- Use fresh, specific details that haven't appeared in previous chapters
+- Show character traits through behavior and dialogue, not repetitive physical descriptions
 
-MORAL COMPLEXITY AND UNRESOLVED ELEMENTS:
-- Create no-win scenarios where every choice has significant cost
-- Challenge genre expectations with morally ambiguous decisions
-- End with complications rather than neat closure
-- Pose questions about character morality that don't have clear answers
+ADVANCED AUTHENTICITY TECHNIQUES:
+- Let established character strengths become weaknesses under different pressures
+- Show internal faction politics affecting every decision, not just major plot points
+- Include moments where characters surprise themselves with choices under pressure
+- Create dialogue subtext that contradicts spoken words, revealing deeper faction conflicts
+- Make consequences of past chapters continue to affect current events and relationships
 
-Write approximately ${chapterOutline.wordTarget} words that feel discovered rather than constructed, embracing the intentional messiness of human creativity.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
+Write approximately ${chapterOutline.wordTarget} words that push established complexity to breaking points and challenge reader expectations while maintaining narrative authenticity.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
 Write only the chapter content, no metadata or formatting.`;
 
