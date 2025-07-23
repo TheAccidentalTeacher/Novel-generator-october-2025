@@ -139,6 +139,12 @@ Complete chapters that feel like a human wrote them, with:
 - **Token Limits**: AI can only "think" so many words at once (like RAM in a computer)
 - **Workaround**: System automatically caps sizes and warns when approaching limits
 
+### Optimal Novel Structure for Large Books:
+- **100K word novel**: 25-30 chapters at 3,300-4,000 words each
+- **80K word novel**: 20-25 chapters at 3,200-4,000 words each
+- **60K word novel**: 15-20 chapters at 3,000-4,000 words each
+- **Sweet spot**: 3,000-4,000 words per chapter gives best AI performance
+
 ### Quality Control:
 After each stage, the system checks:
 - Did we avoid forbidden phrases?
@@ -193,12 +199,16 @@ Instead of tying up every loose end, we leave some questions unanswered and some
 **Solution**: 
 - Try fewer chapters (under 40)
 - Reduce target word count per chapter (under 8,000 words)
+- **For 100K word novels**: Use 25-30 chapters at 3,300-4,000 words each
 - The system now automatically prevents this
 
 ### "Outline generation failed"
 **What happened**: The outline was too complex for the AI to create  
 **Why**: Too many chapters or too much detail requested  
-**Solution**: Break large novels into smaller books or reduce chapter count
+**Solution**: 
+- Break large novels into fewer, longer chapters
+- **Recommended**: 25-30 chapters max for very large novels
+- Target 3,000-4,000 words per chapter for best results
 
 ### Generation takes a very long time
 **What happened**: Large novels require lots of AI processing  
