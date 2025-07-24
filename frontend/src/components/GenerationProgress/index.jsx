@@ -6,6 +6,10 @@ import { getJobStatus } from '../../services/api';
 import ProgressPhase from './ProgressPhase';
 import ChapterProgress from './ChapterProgress';
 import CostTracker from './CostTracker';
+import StoryBibleViewer from '../MonitoringDashboard/StoryBibleViewer';
+import ContinuityAlertsPanel from '../MonitoringDashboard/ContinuityAlertsPanel';
+import QualityMetricsDisplay from '../MonitoringDashboard/QualityMetricsDisplay';
+import AIDecisionStream from '../MonitoringDashboard/AIDecisionStream';
 import '../../styles/GenerationProgress.css';
 
 function GenerationProgress() {
@@ -66,60 +70,127 @@ function GenerationProgress() {
   
   if (state.status === 'completed') {
     return (
-      <div className="completion-container">
-        <h2>Novel Generation Complete!</h2>
-        <p>Your novel has been successfully generated.</p>
-        <button onClick={() => navigate(`/preview/${jobId}`)}>View Novel</button>
+      <div className="generation-progress">
+        <div className="completion-container">
+          <h2>Novel Generation Complete!</h2>
+          <p>Your novel has been successfully generated.</p>
+          <div className="completion-actions">
+            <button onClick={() => navigate(`/preview/${jobId}`)}>📖 Read Your Novel</button>
+            <button 
+              className="secondary-button"
+              onClick={() => navigate(`/monitor/${jobId}`)}
+            >
+              📊 View Full Analytics
+            </button>
+          </div>
+        </div>
+        
+        {/* Show final metrics */}
+        <div className="progress-layout">
+          <div className="progress-main">
+            <div className="completion-summary">
+              <h3>Generation Summary</h3>
+              <p>✅ Planning: Complete</p>
+              <p>✅ Outlining: Complete</p>
+              <p>✅ Writing: {state.progress?.chaptersCompleted || 0} chapters completed</p>
+            </div>
+          </div>
+          
+          <div className="progress-monitoring">
+            <div className="monitoring-tabs">
+              <div className="monitoring-section">
+                <h3>📊 Final Quality Metrics</h3>
+                <QualityMetricsDisplay jobId={jobId} />
+              </div>
+
+              <div className="monitoring-section">
+                <h3>📚 Story Bible</h3>
+                <StoryBibleViewer jobId={jobId} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
   
   return (
     <div className="generation-progress">
-      <h2>Generating Your Novel</h2>
+      <div className="progress-header">
+        <h2>Generating Your Novel</h2>
+        {!isConnected && (
+          <div className="connection-warning">
+            <p>⚠️ Connection lost - reconnecting...</p>
+          </div>
+        )}
+      </div>
       
-      {!isConnected && (
-        <div className="connection-warning">
-          <p>WebSocket connection lost. Using fallback polling. Reconnecting...</p>
+      <div className="progress-layout">
+        {/* Left side - Main progress */}
+        <div className="progress-main">
+          <div className="progress-phases">
+            <ProgressPhase 
+              phase="planning"
+              currentPhase={state.currentPhase}
+              status={state.status}
+              description="Analyzing premise and planning structure"
+            />
+            
+            <ProgressPhase 
+              phase="outlining"
+              currentPhase={state.currentPhase}
+              status={state.status}
+              description="Creating chapter-by-chapter outline"
+            />
+            
+            <ProgressPhase 
+              phase="writing"
+              currentPhase={state.currentPhase}
+              status={state.status}
+              description="Writing chapters based on outline"
+            />
+          </div>
+
+          {state.currentPhase === 'chapter_writing' && (
+            <ChapterProgress 
+              completed={state.progress?.chaptersCompleted || 0}
+              total={state.progress?.totalChapters || 0}
+              estimatedCompletion={state.progress?.estimatedCompletion}
+            />
+          )}
+
+          {import.meta.env.VITE_ENABLE_COST_TRACKING === 'true' && (
+            <CostTracker 
+              outlineGeneration={state.modelUsage?.outlineGeneration}
+              chapterGeneration={state.modelUsage?.chapterGeneration}
+            />
+          )}
         </div>
-      )}
-      
-      <div className="progress-container">
-        <ProgressPhase 
-          phase="planning"
-          currentPhase={state.currentPhase}
-          status={state.status}
-          description="Analyzing premise and planning structure"
-        />
-        
-        <ProgressPhase 
-          phase="outlining"
-          currentPhase={state.currentPhase}
-          status={state.status}
-          description="Creating chapter-by-chapter outline"
-        />
-        
-        <ProgressPhase 
-          phase="writing"
-          currentPhase={state.currentPhase}
-          status={state.status}
-          description="Writing chapters based on outline"
-        />
-        
-        {state.currentPhase === 'chapter_writing' && (
-          <ChapterProgress 
-            completed={state.progress?.chaptersCompleted || 0}
-            total={state.progress?.totalChapters || 0}
-            estimatedCompletion={state.progress?.estimatedCompletion}
-          />
-        )}
-        
-        {import.meta.env.VITE_ENABLE_COST_TRACKING === 'true' && (
-          <CostTracker 
-            outlineGeneration={state.modelUsage?.outlineGeneration}
-            chapterGeneration={state.modelUsage?.chapterGeneration}
-          />
-        )}
+
+        {/* Right side - Monitoring dashboard */}
+        <div className="progress-monitoring">
+          <div className="monitoring-tabs">
+            <div className="monitoring-section">
+              <h3>📊 Quality Metrics</h3>
+              <QualityMetricsDisplay jobId={jobId} />
+            </div>
+
+            <div className="monitoring-section">
+              <h3>📚 Story Bible</h3>
+              <StoryBibleViewer jobId={jobId} />
+            </div>
+
+            <div className="monitoring-section">
+              <h3>⚠️ Continuity Alerts</h3>
+              <ContinuityAlertsPanel jobId={jobId} />
+            </div>
+
+            <div className="monitoring-section">
+              <h3>🤖 AI Decisions</h3>
+              <AIDecisionStream jobId={jobId} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
