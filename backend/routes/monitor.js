@@ -98,4 +98,69 @@ router.get('/ai-decisions/:jobId', async (req, res) => {
   }
 });
 
+// Emergency job control endpoints
+router.post('/kill-job/:jobId', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await Job.findById(jobId);
+    
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Mark job as failed/cancelled
+    job.status = 'failed';
+    job.currentPhase = 'cancelled';
+    job.error = 'Job manually cancelled by user';
+    job.progress.lastActivity = new Date();
+    await job.save();
+
+    // Clean up monitoring data
+    monitoringService.cleanupJob(jobId);
+
+    res.json({ 
+      success: true, 
+      message: `Job ${jobId} has been cancelled`,
+      jobStatus: 'cancelled'
+    });
+  } catch (error) {
+    console.error('Error killing job:', error);
+    res.status(500).json({ error: 'Failed to kill job' });
+  }
+});
+
+router.post('/cleanup-all-jobs', async (req, res) => {
+  try {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    
+    // Find all non-completed jobs older than 2 hours
+    const stuckJobs = await Job.find({
+      status: { $in: ['processing', 'planning', 'outlining', 'writing'] },
+      'progress.lastActivity': { $lt: twoHoursAgo }
+    });
+
+    let cleanedCount = 0;
+    for (const job of stuckJobs) {
+      job.status = 'failed';
+      job.currentPhase = 'cleaned_up';
+      job.error = 'Job automatically cleaned up (inactive for >2 hours)';
+      job.progress.lastActivity = new Date();
+      await job.save();
+      
+      // Clean up monitoring data
+      monitoringService.cleanupJob(job._id.toString());
+      cleanedCount++;
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Cleaned up ${cleanedCount} stuck jobs`,
+      cleanedJobs: cleanedCount 
+    });
+  } catch (error) {
+    console.error('Error cleaning up jobs:', error);
+    res.status(500).json({ error: 'Failed to cleanup jobs' });
+  }
+});
+
 module.exports = router;
