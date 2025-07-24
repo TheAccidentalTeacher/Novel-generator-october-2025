@@ -96,6 +96,7 @@ const { initializeWebSocket, gracefulShutdown: shutdownWebSocket } = require('./
 const novelRoutes = require('./routes/novel');
 const healthRoutes = require('./routes/health');
 const adminRoutes = require('./routes/admin');
+const monitorRoutes = require('./routes/monitor');
 const recoveryService = require('./services/recoveryService');
 const performanceMonitor = require('./middleware/performanceMonitor');
 const requestLimiter = require('./middleware/requestLimiter');
@@ -375,6 +376,9 @@ app.use(express.static(path.join(__dirname, 'public'), {
 
 // API Routes
 app.use('/api/novel', novelRoutes);
+
+// Monitoring routes (for dashboard data)
+app.use('/api/monitor', monitorRoutes);
 
 // Admin routes (for cleaning up stuck jobs)
 app.use('/api/admin', adminRoutes);
