@@ -1,8 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './ContinuityAlertsPanel.css';
 
-function ContinuityAlertsPanel({ alerts, compact = false }) {
+function ContinuityAlertsPanel({ alerts, jobId, compact = false }) {
   const [filter, setFilter] = useState('all');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (alerts) {
+      setData(alerts);
+    } else if (jobId) {
+      // Fetch alerts data for this job
+      setLoading(true);
+      fetch(`/api/monitor/continuity-alerts/${jobId}`)
+        .then(res => res.json())
+        .then(result => {
+          setData(result.alerts || []);
+        })
+        .catch(err => {
+          console.error('Failed to fetch continuity alerts:', err);
+          setData([]);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setData([]);
+    }
+  }, [alerts, jobId]);
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'Unknown time';
@@ -39,12 +62,22 @@ function ContinuityAlertsPanel({ alerts, compact = false }) {
     }
   };
 
-  const filteredAlerts = alerts.filter(alert => {
+  if (loading) {
+    return (
+      <div className="continuity-alerts-panel">
+        <div className="loading-state">Loading continuity alerts...</div>
+      </div>
+    );
+  }
+
+  const alertsData = data || [];
+  
+  const filteredAlerts = alertsData.filter(alert => {
     if (filter === 'all') return true;
     return alert.severity === filter;
   });
 
-  const alertCounts = alerts.reduce((counts, alert) => {
+  const alertCounts = alertsData.reduce((counts, alert) => {
     counts[alert.severity || 'info'] = (counts[alert.severity || 'info'] || 0) + 1;
     return counts;
   }, {});
@@ -52,14 +85,14 @@ function ContinuityAlertsPanel({ alerts, compact = false }) {
   if (compact) {
     return (
       <div className="continuity-alerts-panel compact">
-        {alerts.length === 0 ? (
+        {alertsData.length === 0 ? (
           <div className="no-alerts">
             <span className="status-icon">✅</span>
             <span>No continuity issues detected</span>
           </div>
         ) : (
           <div className="compact-alerts">
-            {alerts.map((alert) => (
+            {alertsData.slice(0, 3).map((alert) => (
               <div key={alert.id} className={`compact-alert ${alert.severity || 'info'}`}>
                 <span className="alert-icon">{getSeverityIcon(alert.severity)}</span>
                 <div className="alert-content">
@@ -79,8 +112,8 @@ function ContinuityAlertsPanel({ alerts, compact = false }) {
       <div className="alerts-header">
         <h2>Continuity Alerts</h2>
         <div className="alerts-summary">
-          <span className="total-count">{alerts.length} total alerts</span>
-          {alerts.length > 0 && (
+          <span className="total-count">{alertsData.length} total alerts</span>
+          {alertsData.length > 0 && (
             <div className="severity-counts">
               {Object.entries(alertCounts).map(([severity, count]) => (
                 <span 
@@ -96,7 +129,7 @@ function ContinuityAlertsPanel({ alerts, compact = false }) {
         </div>
       </div>
 
-      {alerts.length === 0 ? (
+      {alertsData.length === 0 ? (
         <div className="empty-state">
           <div className="success-icon">✅</div>
           <h3>No Continuity Issues</h3>
@@ -109,7 +142,7 @@ function ContinuityAlertsPanel({ alerts, compact = false }) {
               className={filter === 'all' ? 'filter-btn active' : 'filter-btn'}
               onClick={() => setFilter('all')}
             >
-              All ({alerts.length})
+              All ({alertsData.length})
             </button>
             {Object.entries(alertCounts).map(([severity, count]) => (
               <button 

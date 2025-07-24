@@ -1,8 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './StoryBibleViewer.css';
 
-function StoryBibleViewer({ storyBible }) {
+function StoryBibleViewer({ storyBible, jobId }) {
   const [activeSection, setActiveSection] = useState('characters');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (storyBible) {
+      setData(storyBible);
+    } else if (jobId) {
+      // Fetch story bible data for this job
+      setLoading(true);
+      fetch(`/api/monitor/story-bible/${jobId}`)
+        .then(res => res.json())
+        .then(result => {
+          setData(result.storyBible || {});
+        })
+        .catch(err => {
+          console.error('Failed to fetch story bible:', err);
+          setData({});
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setData({});
+    }
+  }, [storyBible, jobId]);
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'Not set';
@@ -11,8 +34,18 @@ function StoryBibleViewer({ storyBible }) {
 
   const isEmpty = (obj) => {
     if (Array.isArray(obj)) return obj.length === 0;
-    return Object.keys(obj).length === 0;
+    return Object.keys(obj || {}).length === 0;
   };
+
+  if (loading) {
+    return (
+      <div className="story-bible-viewer">
+        <div className="loading-state">Loading story bible...</div>
+      </div>
+    );
+  }
+
+  const storyBibleData = data || {};
 
   return (
     <div className="story-bible-viewer">
@@ -28,44 +61,44 @@ function StoryBibleViewer({ storyBible }) {
           className={activeSection === 'characters' ? 'nav-btn active' : 'nav-btn'}
           onClick={() => setActiveSection('characters')}
         >
-          Characters ({Object.keys(storyBible.characters || {}).length})
+          Characters ({Object.keys(storyBibleData.characters || {}).length})
         </button>
         <button 
           className={activeSection === 'plots' ? 'nav-btn active' : 'nav-btn'}
           onClick={() => setActiveSection('plots')}
         >
-          Plot Threads ({(storyBible.plotThreads || []).length})
+          Plot Threads ({(storyBibleData.plotThreads || []).length})
         </button>
         <button 
           className={activeSection === 'timeline' ? 'nav-btn active' : 'nav-btn'}
           onClick={() => setActiveSection('timeline')}
         >
-          Timeline ({(storyBible.timeline || []).length})
+          Timeline ({(storyBibleData.timeline || []).length})
         </button>
         <button 
           className={activeSection === 'locations' ? 'nav-btn active' : 'nav-btn'}
           onClick={() => setActiveSection('locations')}
         >
-          Locations ({Object.keys(storyBible.locations || {}).length})
+          Locations ({Object.keys(storyBibleData.locations || {}).length})
         </button>
         <button 
           className={activeSection === 'themes' ? 'nav-btn active' : 'nav-btn'}
           onClick={() => setActiveSection('themes')}
         >
-          Themes ({(storyBible.themes || []).length})
+          Themes ({(storyBibleData.themes || []).length})
         </button>
       </div>
 
       <div className="bible-content">
         {activeSection === 'characters' && (
           <div className="characters-section">
-            {isEmpty(storyBible.characters) ? (
+            {isEmpty(storyBibleData.characters) ? (
               <div className="empty-state">
                 <p>No characters tracked yet. Characters will appear as the story develops.</p>
               </div>
             ) : (
               <div className="characters-grid">
-                {Object.entries(storyBible.characters).map(([name, character]) => (
+                {Object.entries(storyBibleData.characters || {}).map(([name, character]) => (
                   <div key={name} className="character-card">
                     <h4>{name}</h4>
                     {character.description && (
@@ -105,13 +138,13 @@ function StoryBibleViewer({ storyBible }) {
 
         {activeSection === 'plots' && (
           <div className="plots-section">
-            {isEmpty(storyBible.plotThreads) ? (
+            {isEmpty(storyBibleData.plotThreads) ? (
               <div className="empty-state">
                 <p>No plot threads tracked yet. Plot threads will be identified as the story progresses.</p>
               </div>
             ) : (
               <div className="plots-list">
-                {storyBible.plotThreads.map((thread, idx) => (
+                {(storyBibleData.plotThreads || []).map((thread, idx) => (
                   <div key={idx} className="plot-thread">
                     <h4>{thread.title || `Plot Thread ${idx + 1}`}</h4>
                     <p>{thread.description}</p>
@@ -134,13 +167,13 @@ function StoryBibleViewer({ storyBible }) {
 
         {activeSection === 'timeline' && (
           <div className="timeline-section">
-            {isEmpty(storyBible.timeline) ? (
+            {isEmpty(storyBibleData.timeline) ? (
               <div className="empty-state">
                 <p>No timeline events tracked yet. Events will be recorded as they occur in the story.</p>
               </div>
             ) : (
               <div className="timeline-list">
-                {storyBible.timeline.map((event, idx) => (
+                {(storyBibleData.timeline || []).map((event, idx) => (
                   <div key={idx} className="timeline-event">
                     <div className="event-marker"></div>
                     <div className="event-content">
@@ -164,17 +197,23 @@ function StoryBibleViewer({ storyBible }) {
 
         {activeSection === 'locations' && (
           <div className="locations-section">
-            {isEmpty(storyBible.locations) ? (
+            {isEmpty(storyBibleData.locations) ? (
               <div className="empty-state">
                 <p>No locations tracked yet. Locations will be catalogued as they appear in the story.</p>
               </div>
             ) : (
               <div className="locations-grid">
-                {Object.entries(storyBible.locations).map(([name, location]) => (
+                {Object.entries(storyBibleData.locations || {}).map(([name, location]) => (
                   <div key={name} className="location-card">
                     <h4>{name}</h4>
                     {location.description && (
                       <p className="location-description">{location.description}</p>
+                    )}
+                    {location.significance && (
+                      <div className="location-significance">
+                        <strong>Significance:</strong>
+                        <p>{location.significance}</p>
+                      </div>
                     )}
                     {location.firstMentioned && (
                       <div className="first-mentioned">
@@ -190,16 +229,18 @@ function StoryBibleViewer({ storyBible }) {
 
         {activeSection === 'themes' && (
           <div className="themes-section">
-            {isEmpty(storyBible.themes) ? (
+            {isEmpty(storyBibleData.themes) ? (
               <div className="empty-state">
-                <p>No themes identified yet. Themes will be extracted as the story develops.</p>
+                <p>No themes tracked yet. Themes will be identified as they emerge in the narrative.</p>
               </div>
             ) : (
               <div className="themes-list">
-                {storyBible.themes.map((theme, idx) => (
+                {(storyBibleData.themes || []).map((theme, idx) => (
                   <div key={idx} className="theme-item">
                     <h4>{theme.name || `Theme ${idx + 1}`}</h4>
-                    <p>{theme.description}</p>
+                    {theme.description && (
+                      <p className="theme-description">{theme.description}</p>
+                    )}
                     {theme.examples && theme.examples.length > 0 && (
                       <div className="theme-examples">
                         <strong>Examples:</strong>
@@ -208,6 +249,14 @@ function StoryBibleViewer({ storyBible }) {
                             <li key={exIdx}>{example}</li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+                    {theme.chapters && theme.chapters.length > 0 && (
+                      <div className="theme-chapters">
+                        <strong>Present in chapters:</strong>
+                        <span className="chapter-list">
+                          {theme.chapters.join(', ')}
+                        </span>
                       </div>
                     )}
                   </div>

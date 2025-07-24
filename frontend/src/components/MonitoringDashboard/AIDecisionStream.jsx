@@ -1,9 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './AIDecisionStream.css';
 
-function AIDecisionStream({ decisions }) {
+function AIDecisionStream({ decisions, jobId }) {
   const [filter, setFilter] = useState('all');
   const [expandedDecision, setExpandedDecision] = useState(null);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (decisions) {
+      setData(decisions);
+    } else if (jobId) {
+      // Fetch decisions data for this job
+      setLoading(true);
+      fetch(`/api/monitor/ai-decisions/${jobId}`)
+        .then(res => res.json())
+        .then(result => {
+          setData(result.decisions || []);
+        })
+        .catch(err => {
+          console.error('Failed to fetch AI decisions:', err);
+          setData([]);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setData([]);
+    }
+  }, [decisions, jobId]);
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
@@ -23,12 +46,22 @@ function AIDecisionStream({ decisions }) {
     }
   };
 
-  const filteredDecisions = decisions.filter(decision => {
+  if (loading) {
+    return (
+      <div className="ai-decision-stream">
+        <div className="loading-state">Loading AI decisions...</div>
+      </div>
+    );
+  }
+
+  const decisionsData = data || [];
+  
+  const filteredDecisions = decisionsData.filter(decision => {
     if (filter === 'all') return true;
     return decision.type === filter;
   });
 
-  const decisionTypes = [...new Set(decisions.map(d => d.type))];
+  const decisionTypes = [...new Set(decisionsData.map(d => d.type))];
 
   return (
     <div className="ai-decision-stream">
@@ -37,7 +70,7 @@ function AIDecisionStream({ decisions }) {
         <p>Real-time view of AI reasoning and decision-making process</p>
       </div>
 
-      {decisions.length === 0 ? (
+      {decisionsData.length === 0 ? (
         <div className="empty-state">
           <div className="thinking-icon">🤖</div>
           <h3>No Decisions Logged Yet</h3>
@@ -50,10 +83,10 @@ function AIDecisionStream({ decisions }) {
               className={filter === 'all' ? 'filter-btn active' : 'filter-btn'}
               onClick={() => setFilter('all')}
             >
-              All ({decisions.length})
+              All ({decisionsData.length})
             </button>
             {decisionTypes.map(type => {
-              const count = decisions.filter(d => d.type === type).length;
+              const count = decisionsData.filter(d => d.type === type).length;
               return (
                 <button 
                   key={type}

@@ -1,6 +1,31 @@
+import { useState, useEffect } from 'react';
 import './QualityMetricsDisplay.css';
 
-function QualityMetricsDisplay({ metrics, compact = false }) {
+function QualityMetricsDisplay({ metrics, jobId, compact = false }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (metrics) {
+      setData(metrics);
+    } else if (jobId) {
+      // Fetch metrics data for this job
+      setLoading(true);
+      fetch(`/api/monitor/quality-metrics/${jobId}`)
+        .then(res => res.json())
+        .then(result => {
+          setData(result.metrics || {});
+        })
+        .catch(err => {
+          console.error('Failed to fetch quality metrics:', err);
+          setData({});
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setData({});
+    }
+  }, [metrics, jobId]);
+
   const formatScore = (score) => {
     if (typeof score !== 'number') return '0';
     return Math.round(score * 100);
@@ -48,11 +73,21 @@ function QualityMetricsDisplay({ metrics, compact = false }) {
   };
 
   const calculateOverallScore = () => {
-    const scores = Object.values(metrics).filter(score => typeof score === 'number');
+    const metricsData = data || {};
+    const scores = Object.values(metricsData).filter(score => typeof score === 'number');
     if (scores.length === 0) return 0;
     return scores.reduce((sum, score) => sum + score, 0) / scores.length;
   };
 
+  if (loading) {
+    return (
+      <div className="quality-metrics-display">
+        <div className="loading-state">Loading quality metrics...</div>
+      </div>
+    );
+  }
+
+  const metricsData = data || {};
   const overallScore = calculateOverallScore();
 
   if (compact) {
@@ -66,7 +101,7 @@ function QualityMetricsDisplay({ metrics, compact = false }) {
           <span className="overall-label">Overall Quality</span>
         </div>
         <div className="compact-metrics">
-          {Object.entries(metrics).map(([key, score]) => {
+          {Object.entries(metricsData).map(([key, score]) => {
             const def = metricDefinitions[key];
             if (!def) return null;
             return (
@@ -105,7 +140,7 @@ function QualityMetricsDisplay({ metrics, compact = false }) {
       </div>
 
       <div className="metrics-grid">
-        {Object.entries(metrics).map(([key, score]) => {
+        {Object.entries(metricsData).map(([key, score]) => {
           const def = metricDefinitions[key];
           if (!def) return null;
           
@@ -170,7 +205,7 @@ function QualityMetricsDisplay({ metrics, compact = false }) {
           <div className="insight-item">
             <strong>Strengths:</strong>
             <span>
-              {Object.entries(metrics)
+              {Object.entries(metricsData)
                 .filter(([_, score]) => score >= 0.8)
                 .map(([key, _]) => metricDefinitions[key]?.name)
                 .filter(Boolean)
@@ -180,7 +215,7 @@ function QualityMetricsDisplay({ metrics, compact = false }) {
           <div className="insight-item">
             <strong>Focus Areas:</strong>
             <span>
-              {Object.entries(metrics)
+              {Object.entries(metricsData)
                 .filter(([_, score]) => score < 0.7)
                 .map(([key, _]) => metricDefinitions[key]?.name)
                 .filter(Boolean)
