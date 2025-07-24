@@ -13,7 +13,7 @@ const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
 const ContinuityGuardian = require('../shared/continuityGuardian');
-const monitoringService = require('./monitoringService');
+// const monitoringService = require('./monitoringService'); // Removed - was causing crashes
 
 class AIService {
   constructor() {
@@ -56,8 +56,8 @@ class AIService {
     }
     
     // Initialize monitoring for this job
-    monitoringService.initializeJob(jobId);
-    logger.info(`Monitoring service initialized for job ${jobId}`);
+    // monitoringService.initializeJob(jobId); // Removed - was causing crashes
+    logger.info(`Monitoring service disabled for job ${jobId}`);
     
     // Add to active jobs
     this.activeJobs.set(jobId, {
@@ -197,29 +197,29 @@ Respond in JSON format:
       const analysisResult = this.extractJSON(response.choices[0].message.content);
       
       // Log AI decision for premise analysis
-      monitoringService.logAIDecision(jobId, {
-        type: 'premise-analysis',
-        context: `Genre: ${job.genre}/${job.subgenre}`,
-        reasoning: 'Analyzed premise to identify key themes, character archetypes, and plot structure',
-        choice: `Selected ${analysisResult.themes?.length || 0} main themes and ${analysisResult.characters?.length || 0} character archetypes`,
-        confidence: 0.8
-      });
+      // monitoringService.logAIDecision(jobId, {
+      //   type: 'premise-analysis',
+      //   context: `Genre: ${job.genre}/${job.subgenre}`,
+      //   reasoning: 'Analyzed premise to identify key themes, character archetypes, and plot structure',
+      //   choice: `Selected ${analysisResult.themes?.length || 0} main themes and ${analysisResult.characters?.length || 0} character archetypes`,
+      //   confidence: 0.8
+      // });
       
       // Update story bible with initial themes and character concepts
-      monitoringService.updateStoryBible(jobId, {
-        themes: analysisResult.themes?.map(theme => ({ name: theme, description: `Theme identified during premise analysis` })) || [],
-        characters: Object.fromEntries(
-          (analysisResult.characters || []).map(char => [
-            char.type || 'Unnamed Character',
-            {
-              description: char.conflicts || 'Character concept from analysis',
-              traits: [char.speechPattern || 'Distinctive voice'],
-              relationships: [],
-              lastSeen: null
-            }
-          ])
-        )
-      });
+      // monitoringService.updateStoryBible(jobId, {
+      //   themes: analysisResult.themes?.map(theme => ({ name: theme, description: `Theme identified during premise analysis` })) || [],
+      //   characters: Object.fromEntries(
+      //     (analysisResult.characters || []).map(char => [
+      //       char.type || 'Unnamed Character',
+      //       {
+      //         description: char.conflicts || 'Character concept from analysis',
+      //         traits: [char.speechPattern || 'Distinctive voice'],
+      //         relationships: [],
+      //         lastSeen: null
+      //       }
+      //     ])
+      //   )
+      // });
       
       // Calculate cost
       const cost = this.calculateCost(
@@ -247,7 +247,7 @@ Respond in JSON format:
         creativityScore: analysisResult.humanLikeElements ? 0.7 : 0.6
       };
       
-      monitoringService.updateQualityMetrics(jobId, analysisQuality);
+      // monitoringService.updateQualityMetrics(jobId, analysisQuality); // Removed - was causing crashes
       
       logger.info(`Completed premise analysis for job ${jobId}`);
       
