@@ -13,6 +13,7 @@ const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
 const ContinuityGuardian = require('../shared/continuityGuardian');
+const monitoringService = require('./monitoringService');
 
 class AIService {
   constructor() {
@@ -54,6 +55,10 @@ class AIService {
       logger.info(`Continuity Guardian initialized for job ${jobId}`);
     }
     
+    // Initialize monitoring for this job
+    monitoringService.initializeJob(jobId);
+    logger.info(`Monitoring service initialized for job ${jobId}`);
+    
     // Add to active jobs
     this.activeJobs.set(jobId, {
       startTime: Date.now(),
@@ -85,6 +90,9 @@ class AIService {
       
       // Remove from active jobs
       this.activeJobs.delete(jobId);
+      
+      // Clean up monitoring data (but preserve final state for viewing)
+      // Note: We don't clean up here so users can review the final monitoring data
       
       emitJobUpdate(jobId, {
         status: 'completed',
@@ -188,6 +196,31 @@ Respond in JSON format:
       
       const analysisResult = this.extractJSON(response.choices[0].message.content);
       
+      // Log AI decision for premise analysis
+      monitoringService.logAIDecision(jobId, {
+        type: 'premise-analysis',
+        context: `Genre: ${job.genre}/${job.subgenre}`,
+        reasoning: 'Analyzed premise to identify key themes, character archetypes, and plot structure',
+        choice: `Selected ${analysisResult.themes?.length || 0} main themes and ${analysisResult.characters?.length || 0} character archetypes`,
+        confidence: 0.8
+      });
+      
+      // Update story bible with initial themes and character concepts
+      monitoringService.updateStoryBible(jobId, {
+        themes: analysisResult.themes?.map(theme => ({ name: theme, description: `Theme identified during premise analysis` })) || [],
+        characters: Object.fromEntries(
+          (analysisResult.characters || []).map(char => [
+            char.type || 'Unnamed Character',
+            {
+              description: char.conflicts || 'Character concept from analysis',
+              traits: [char.speechPattern || 'Distinctive voice'],
+              relationships: [],
+              lastSeen: null
+            }
+          ])
+        )
+      });
+      
       // Calculate cost
       const cost = this.calculateCost(
         'gpt-4o-mini',
@@ -205,6 +238,16 @@ Respond in JSON format:
       };
       
       await job.save();
+      
+      // Update quality metrics based on analysis depth
+      const analysisQuality = {
+        complexityScore: Math.min(0.8, (analysisResult.themes?.length || 0) * 0.1 + (analysisResult.characters?.length || 0) * 0.1),
+        humanLikenessScore: job.humanLikeWriting ? 0.7 : 0.5,
+        consistencyScore: 0.8, // High at start, will be updated during writing
+        creativityScore: analysisResult.humanLikeElements ? 0.7 : 0.6
+      };
+      
+      monitoringService.updateQualityMetrics(jobId, analysisQuality);
       
       logger.info(`Completed premise analysis for job ${jobId}`);
       

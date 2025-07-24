@@ -361,6 +361,19 @@ const emitCostTracking = (jobId, cost) => {
   });
 };
 
+const emitAIDecision = (jobId, decision) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.AI_DECISION, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    ...decision
+  });
+  
+  logger.debug(`AI decision emitted for job ${jobId}:`, decision);
+};
+
 module.exports = {
   initializeWebSocket,
   emitJobUpdate,
@@ -377,5 +390,6 @@ module.exports = {
   emitPhaseTransition,
   emitQualityMetrics,
   emitCostTracking,
+  emitAIDecision,
   EventTypes
 };

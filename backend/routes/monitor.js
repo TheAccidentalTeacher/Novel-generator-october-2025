@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Job = require('../models/job');
+const monitoringService = require('../services/monitoringService');
 
 // Get quality metrics for a job
 router.get('/quality-metrics/:jobId', async (req, res) => {
@@ -12,8 +13,9 @@ router.get('/quality-metrics/:jobId', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Extract metrics from job metadata or provide defaults
-    const metrics = job.metadata?.qualityMetrics || {
+    // Get metrics from monitoring service or job metadata
+    const monitoring = monitoringService.getJobMonitoring(jobId);
+    const metrics = monitoring.qualityMetrics || job.metadata?.qualityMetrics || {
       humanLikenessScore: 0.75,
       complexityScore: 0.70,
       consistencyScore: 0.80,
@@ -37,8 +39,9 @@ router.get('/story-bible/:jobId', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Extract story bible from job metadata or provide empty structure
-    const storyBible = job.metadata?.storyBible || {
+    // Get story bible from monitoring service or job metadata
+    const monitoring = monitoringService.getJobMonitoring(jobId);
+    const storyBible = monitoring.storyBible || job.metadata?.storyBible || {
       characters: {},
       plotThreads: [],
       timeline: [],
@@ -63,8 +66,9 @@ router.get('/continuity-alerts/:jobId', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Extract alerts from job metadata or provide empty array
-    const alerts = job.metadata?.continuityAlerts || [];
+    // Get alerts from monitoring service or job metadata
+    const monitoring = monitoringService.getJobMonitoring(jobId);
+    const alerts = monitoring.continuityAlerts || job.metadata?.continuityAlerts || [];
 
     res.json({ alerts });
   } catch (error) {
@@ -83,8 +87,9 @@ router.get('/ai-decisions/:jobId', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Extract decisions from job metadata or provide empty array
-    const decisions = job.metadata?.aiDecisions || [];
+    // Get decisions from monitoring service or job metadata
+    const monitoring = monitoringService.getJobMonitoring(jobId);
+    const decisions = monitoring.aiDecisions || job.metadata?.aiDecisions || [];
 
     res.json({ decisions });
   } catch (error) {
