@@ -1,0 +1,207 @@
+/* MonitoringDashboard.css */
+.monitoring-dashboard {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.dashboard-header {
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-content h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.job-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.job-id {
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.dashboard-nav {
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0 2rem;
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  color: #6c757d;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab:hover {
+  color: #495057;
+  background: #f8f9fa;
+}
+
+.tab.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.alert-badge {
+  background: #dc3545;
+  color: white;
+  border-radius: 10px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+  min-width: 18px;
+  text-align: center;
+}
+
+.dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Overview Grid */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e9ecef;
+}
+
+.overview-card.alert {
+  border-left: 4px solid #dc3545;
+}
+
+.overview-card h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 1rem;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .dashboard-nav {
+    padding: 0 1rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  
+  .tab {
+    white-space: nowrap;
+    padding: 1rem;
+  }
+  
+  .dashboard-content {
+    padding: 1rem;
+  }
+  
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Error state */
+.monitoring-dashboard.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  color: #6c757d;
+}
+
+.monitoring-dashboard.error h2 {
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+/* Loading states */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Real-time indicators */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #28a745;
+  font-size: 0.9rem;
+}
+
+.live-indicator::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #28a745;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

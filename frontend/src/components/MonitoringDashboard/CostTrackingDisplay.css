@@ -1,0 +1,74 @@
+/* CostTrackingDisplay.css */
+.cost-tracking-display {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.cost-tracking-display.compact .cost-summary {
+  display: flex;
+  gap: 1rem;
+}
+
+.cost-summary .total-cost, .cost-summary .tokens-used {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cost-label, .tokens-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.cost-value, .tokens-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.cost-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.cost-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.cost-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.cost-amount, .token-amount, .estimate-amount {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.cost-breakdown {
+  border-top: 1px solid #e9ecef;
+  padding-top: 1rem;
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}

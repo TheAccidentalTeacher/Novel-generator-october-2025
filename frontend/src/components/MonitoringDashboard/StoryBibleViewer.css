@@ -1,0 +1,309 @@
+/* StoryBibleViewer.css */
+.story-bible-viewer {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.bible-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.bible-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.bible-description {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.bible-nav {
+  display: flex;
+  border-bottom: 1px solid #e9ecef;
+  overflow-x: auto;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  color: #6c757d;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-btn:hover {
+  color: #495057;
+  background: #f8f9fa;
+}
+
+.nav-btn.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.bible-content {
+  padding: 1.5rem;
+  min-height: 400px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.empty-state p {
+  margin: 0;
+  font-style: italic;
+}
+
+/* Characters section */
+.characters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.character-card {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.character-card h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.character-description {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.character-traits {
+  margin: 1rem 0;
+}
+
+.traits-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.trait-tag {
+  background: #007bff;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.character-relationships ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1rem;
+}
+
+.last-seen {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+  color: #6c757d;
+}
+
+/* Plot threads section */
+.plots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.plot-thread {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.plot-thread h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.thread-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background: #28a745;
+  color: white;
+}
+
+.status-badge.resolved {
+  background: #6c757d;
+  color: white;
+}
+
+.status-badge.developing {
+  background: #ffc107;
+  color: #212529;
+}
+
+.introduced-in {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+/* Timeline section */
+.timeline-list {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline-list::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.timeline-event {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.event-marker {
+  position: absolute;
+  left: -2rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
+  background: #007bff;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #e9ecef;
+}
+
+.event-content {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.event-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.event-chapter, .event-timestamp {
+  display: inline-block;
+  margin-right: 1rem;
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+/* Locations section */
+.locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.location-card {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.location-card h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.location-description {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.first-mentioned {
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+  color: #6c757d;
+}
+
+/* Themes section */
+.themes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.theme-item {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.theme-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.theme-examples ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .bible-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  
+  .nav-btn {
+    padding: 1rem;
+  }
+  
+  .characters-grid, .locations-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .timeline-list {
+    padding-left: 1rem;
+  }
+  
+  .event-marker {
+    left: -1rem;
+  }
+}

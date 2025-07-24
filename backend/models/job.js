@@ -195,6 +195,212 @@ const jobSchema = new mongoose.Schema({
     plotContinuity: Number
   },
   
+  // Enhanced monitoring metadata
+  metadata: {
+    // Story Bible for continuity tracking
+    storyBible: {
+      characters: {
+        type: Map,
+        of: {
+          description: String,
+          traits: [String],
+          relationships: [String],
+          lastSeen: Number,
+          firstAppearance: Number
+        },
+        default: new Map()
+      },
+      plotThreads: [{
+        title: String,
+        description: String,
+        status: {
+          type: String,
+          enum: ['active', 'resolved', 'developing'],
+          default: 'active'
+        },
+        introducedIn: Number,
+        lastUpdated: Number
+      }],
+      timeline: [{
+        title: String,
+        description: String,
+        chapter: Number,
+        timestamp: Date,
+        importance: {
+          type: String,
+          enum: ['minor', 'major', 'critical'],
+          default: 'minor'
+        }
+      }],
+      locations: {
+        type: Map,
+        of: {
+          description: String,
+          firstMentioned: Number,
+          significance: String
+        },
+        default: new Map()
+      },
+      themes: [{
+        name: String,
+        description: String,
+        examples: [String]
+      }]
+    },
+    
+    // Continuity alerts
+    continuityAlerts: [{
+      id: String,
+      severity: {
+        type: String,
+        enum: ['info', 'warning', 'critical'],
+        default: 'info'
+      },
+      message: String,
+      details: String,
+      suggestion: String,
+      context: {
+        chapter: Number,
+        character: String,
+        plotThread: String
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now
+      },
+      resolved: {
+        type: Boolean,
+        default: false
+      }
+    }],
+    
+    // Enhanced quality metrics
+    enhancedQualityMetrics: {
+      humanLikenessScore: {
+        type: Number,
+        min: 0,
+        max: 1,
+        default: 0
+      },
+      complexityScore: {
+        type: Number,
+        min: 0,
+        max: 1,
+        default: 0
+      },
+      consistencyScore: {
+        type: Number,
+        min: 0,
+        max: 1,
+        default: 0
+      },
+      creativityScore: {
+        type: Number,
+        min: 0,
+        max: 1,
+        default: 0
+      }
+    },
+    
+    // Cost tracking details
+    costTracking: {
+      totalCost: {
+        type: Number,
+        default: 0
+      },
+      tokensUsed: {
+        type: Number,
+        default: 0
+      },
+      estimatedRemaining: {
+        type: Number,
+        default: 0
+      },
+      breakdown: {
+        analysis: {
+          type: Number,
+          default: 0
+        },
+        outline: {
+          type: Number,
+          default: 0
+        },
+        chapters: {
+          type: Number,
+          default: 0
+        }
+      }
+    },
+    
+    // Applied enhancements log
+    enhancementsApplied: [{
+      id: String,
+      type: {
+        type: String,
+        enum: ['character', 'dialogue', 'plot', 'style', 'world'],
+        default: 'style'
+      },
+      name: String,
+      description: String,
+      details: String,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    
+    // AI decision log
+    aiDecisions: [{
+      id: String,
+      type: {
+        type: String,
+        enum: ['character-development', 'plot-choice', 'dialogue-style', 'scene-setting', 'enhancement-application', 'continuity-check'],
+        default: 'enhancement-application'
+      },
+      summary: String,
+      reasoning: String,
+      confidence: {
+        type: Number,
+        min: 0,
+        max: 1
+      },
+      alternatives: [{
+        option: String,
+        reason: String
+      }],
+      impact: String,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    
+    // System performance tracking
+    performance: {
+      averageResponseTime: Number,
+      totalRequests: {
+        type: Number,
+        default: 0
+      },
+      errorCount: {
+        type: Number,
+        default: 0
+      },
+      lastHealthCheck: Date
+    },
+    
+    // Generation progress details
+    currentStep: String,
+    estimatedTimeRemaining: Number,
+    phaseStartTimes: {
+      premise_analysis: Date,
+      outline_generation: Date,
+      chapter_writing: Date,
+      quality_validation: Date,
+      finalization: Date
+    }
+  },
+  
   createdAt: { 
     type: Date, 
     default: Date.now,

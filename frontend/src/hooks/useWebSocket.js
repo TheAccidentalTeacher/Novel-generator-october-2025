@@ -75,6 +75,43 @@ export function useWebSocket(jobId) {
           }
         }
       });
+
+      // Handle monitoring events from the new transparency system
+      socket.current.on('story-bible-update', (data) => {
+        dispatch({ type: 'STORY_BIBLE_UPDATE', payload: data });
+      });
+
+      socket.current.on('continuity-alert', (data) => {
+        dispatch({ type: 'CONTINUITY_ALERT', payload: data });
+      });
+
+      socket.current.on('generation-progress', (data) => {
+        dispatch({ type: 'GENERATION_PROGRESS_UPDATE', payload: data });
+      });
+
+      socket.current.on('phase-transition', (data) => {
+        dispatch({ type: 'PHASE_TRANSITION', payload: data });
+      });
+
+      socket.current.on('quality-metrics', (data) => {
+        dispatch({ type: 'QUALITY_METRICS_UPDATE', payload: data });
+      });
+
+      socket.current.on('cost-tracking', (data) => {
+        dispatch({ type: 'COST_TRACKING_UPDATE', payload: data });
+      });
+
+      socket.current.on('enhancement-applied', (data) => {
+        dispatch({ type: 'ENHANCEMENT_APPLIED', payload: data });
+      });
+
+      socket.current.on('ai-decision', (data) => {
+        dispatch({ type: 'AI_DECISION_LOGGED', payload: data });
+      });
+
+      socket.current.on('system-health', (data) => {
+        dispatch({ type: 'SYSTEM_HEALTH_UPDATE', payload: data });
+      });
     };
     
     connectSocket();
