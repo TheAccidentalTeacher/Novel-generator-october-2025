@@ -19,7 +19,10 @@ const EventTypes = {
   QUALITY_METRICS: 'qualityMetrics',
   LIVE_TEXT_STREAM: 'liveTextStream',
   PHASE_TRANSITION: 'phaseTransition',
-  COST_TRACKING: 'costTracking'
+  COST_TRACKING: 'costTracking',
+  ENHANCEMENT_APPLIED: 'enhancementApplied',
+  AI_DECISION: 'aiDecision',
+  SYSTEM_HEALTH: 'systemHealth'
 };
 
 const initializeWebSocket = (server) => {

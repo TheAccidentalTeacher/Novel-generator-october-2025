@@ -681,6 +681,269 @@ router.get('/failures/:jobId',
   }
 );
 
+// ========================================
+// MONITORING & TRANSPARENCY API ENDPOINTS
+// ========================================
+
+// Get story bible data for a job
+router.get('/story-bible/:jobId',
+  generalRateLimit,
+  [
+    param('jobId').isMongoId().withMessage('Valid job ID required')
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const job = await Job.findById(req.params.jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Extract story bible from job metadata
+      const storyBible = job.metadata?.storyBible || {
+        characters: {},
+        plotThreads: [],
+        timeline: [],
+        locations: {},
+        themes: []
+      };
+
+      res.json({
+        jobId: req.params.jobId,
+        storyBible,
+        lastUpdated: job.updatedAt
+      });
+
+    } catch (error) {
+      logger.error('Error fetching story bible:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch story bible',
+        message: 'Internal server error'
+      });
+    }
+  }
+);
+
+// Get continuity alerts for a job
+router.get('/continuity-alerts/:jobId',
+  generalRateLimit,
+  [
+    param('jobId').isMongoId().withMessage('Valid job ID required')
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const job = await Job.findById(req.params.jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Extract continuity alerts from job metadata
+      const alerts = job.metadata?.continuityAlerts || [];
+
+      res.json({
+        jobId: req.params.jobId,
+        alerts,
+        totalCount: alerts.length,
+        lastChecked: job.updatedAt
+      });
+
+    } catch (error) {
+      logger.error('Error fetching continuity alerts:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch continuity alerts',
+        message: 'Internal server error'
+      });
+    }
+  }
+);
+
+// Get quality metrics for a job
+router.get('/quality-metrics/:jobId',
+  generalRateLimit,
+  [
+    param('jobId').isMongoId().withMessage('Valid job ID required')
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const job = await Job.findById(req.params.jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Extract quality metrics from job metadata
+      const metrics = job.metadata?.enhancedQualityMetrics || {
+        humanLikenessScore: 0,
+        complexityScore: 0,
+        consistencyScore: 0,
+        creativityScore: 0
+      };
+
+      res.json({
+        jobId: req.params.jobId,
+        metrics,
+        lastUpdated: job.updatedAt
+      });
+
+    } catch (error) {
+      logger.error('Error fetching quality metrics:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch quality metrics',
+        message: 'Internal server error'
+      });
+    }
+  }
+);
+
+// Get cost tracking data for a job
+router.get('/cost-tracking/:jobId',
+  generalRateLimit,
+  [
+    param('jobId').isMongoId().withMessage('Valid job ID required')
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const job = await Job.findById(req.params.jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Extract cost tracking from job metadata
+      const costTracking = job.metadata?.costTracking || {
+        totalCost: 0,
+        tokensUsed: 0,
+        estimatedRemaining: 0,
+        breakdown: {
+          analysis: 0,
+          outline: 0,
+          chapters: 0
+        }
+      };
+
+      res.json({
+        jobId: req.params.jobId,
+        costTracking,
+        lastUpdated: job.updatedAt
+      });
+
+    } catch (error) {
+      logger.error('Error fetching cost tracking:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch cost tracking',
+        message: 'Internal server error'
+      });
+    }
+  }
+);
+
+// Get all monitoring data for a job (comprehensive endpoint)
+router.get('/monitoring/:jobId',
+  generalRateLimit,
+  [
+    param('jobId').isMongoId().withMessage('Valid job ID required')
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const job = await Job.findById(req.params.jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Compile comprehensive monitoring data
+      const monitoring = {
+        jobId: req.params.jobId,
+        status: job.status,
+        currentPhase: job.currentPhase,
+        lastUpdated: job.updatedAt,
+        storyBible: job.metadata?.storyBible || {
+          characters: {},
+          plotThreads: [],
+          timeline: [],
+          locations: {},
+          themes: []
+        },
+        continuityAlerts: job.metadata?.continuityAlerts || [],
+        qualityMetrics: job.metadata?.enhancedQualityMetrics || {
+          humanLikenessScore: 0,
+          complexityScore: 0,
+          consistencyScore: 0,
+          creativityScore: 0
+        },
+        costTracking: job.metadata?.costTracking || {
+          totalCost: 0,
+          tokensUsed: 0,
+          estimatedRemaining: 0,
+          breakdown: {
+            analysis: 0,
+            outline: 0,
+            chapters: 0
+          }
+        },
+        enhancementsApplied: job.metadata?.enhancementsApplied || [],
+        aiDecisions: job.metadata?.aiDecisions || [],
+        systemHealth: {
+          status: job.status,
+          lastUpdate: job.updatedAt,
+          performance: job.metadata?.performance || {}
+        },
+        generationProgress: {
+          currentStep: job.metadata?.currentStep || '',
+          percentage: job.progress?.percentage || 0,
+          estimatedTimeRemaining: job.metadata?.estimatedTimeRemaining || null,
+          lastActivity: job.updatedAt
+        }
+      };
+
+      res.json(monitoring);
+
+    } catch (error) {
+      logger.error('Error fetching comprehensive monitoring data:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch monitoring data',
+        message: 'Internal server error'
+      });
+    }
+  }
+);
+
 // Error handling middleware
 router.use((error, req, res, next) => {
   logger.error('Route error:', error);
