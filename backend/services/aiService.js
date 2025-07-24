@@ -1,7 +1,13 @@
 const { OpenAI } = require('openai');
 const Job = require('../models/job');
 const logger = require('../logger');
-const { emitJobUpdate } = require('../websocket');
+const { 
+  emitJobUpdate, 
+  emitPhaseTransition, 
+  emitGenerationProgress, 
+  emitCostTracking,
+  emitQualityMetrics 
+} = require('../websocket');
 const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
@@ -20,8 +26,8 @@ class AIService {
     
     this.activeJobs = new Map();
     
-    // Initialize Continuity Guardian for advanced quality control
-    this.continuityGuardian = new ContinuityGuardian();
+    // Initialize Continuity Guardian per job (moved to generateNovel method)
+    this.continuityGuardians = new Map();
     
     // Cost tracking per model (prices as of 2024)
     // Model limits: gpt-4o/gpt-4o-mini context: 128K tokens, output: 16K tokens
@@ -41,6 +47,12 @@ class AIService {
   async generateNovel(jobId) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
+
+    // Initialize Continuity Guardian for this job
+    if (job.humanLikeWriting && job.continuityGuardian !== false) {
+      this.continuityGuardians.set(jobId, new ContinuityGuardian(jobId));
+      logger.info(`Continuity Guardian initialized for job ${jobId}`);
+    }
     
     // Add to active jobs
     this.activeJobs.set(jobId, {
@@ -49,6 +61,13 @@ class AIService {
     });
     
     try {
+      // Emit phase transition
+      emitPhaseTransition(jobId, {
+        from: 'initialization',
+        to: 'analysis',
+        phase: 'Analyzing premise and planning story structure'
+      });
+      
       // Phase 1: Premise Analysis
       await this.analyzePremise(jobId);
       
@@ -197,6 +216,13 @@ Respond in JSON format:
   async generateOutline(jobId) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
+    
+    // Emit phase transition
+    emitPhaseTransition(jobId, {
+      from: 'analysis',
+      to: 'outlining',
+      phase: 'Creating detailed chapter-by-chapter outline'
+    });
     
     // Check for potential token limit issues with large outlines
     if (job.targetChapters > 40) {
@@ -664,10 +690,19 @@ JSON format:
     
     // Generate continuity checking prompt if enabled
     let continuityPrompt = '';
-    if (job.humanLikeWriting && job.continuityGuardian !== false) {
+    const continuityGuardian = this.continuityGuardians.get(jobId);
+    if (job.humanLikeWriting && job.continuityGuardian !== false && continuityGuardian) {
       try {
         const previousChapters = job.chapters.slice(0, chapterNumber - 1);
-        continuityPrompt = this.continuityGuardian.generateContinuityPrompt(chapterOutline, previousChapters);
+        continuityPrompt = continuityGuardian.generateContinuityPrompt(chapterOutline, previousChapters);
+        
+        // Emit generation progress
+        emitGenerationProgress(jobId, {
+          phase: 'chapter_generation',
+          chapterNumber,
+          status: 'continuity_check_prepared',
+          details: `Continuity prompt generated for chapter ${chapterNumber}`
+        });
       } catch (error) {
         logger.warn(`Continuity Guardian error for chapter ${chapterNumber}: ${error.message}`);
         // Continue without continuity checking rather than fail
@@ -757,6 +792,15 @@ Write approximately ${chapterOutline.wordTarget} words that push established com
 
 Write only the chapter content, no metadata or formatting.`;
 
+        // Emit generation progress
+        emitGenerationProgress(jobId, {
+          phase: 'chapter_generation',
+          chapterNumber,
+          status: 'ai_generating',
+          wordTarget: chapterOutline.wordTarget,
+          details: `Generating chapter ${chapterNumber}: "${chapterOutline.title}"`
+        });
+
         const response = await this.openai.chat.completions.create({
           model: 'gpt-4o',
           messages: [{ role: 'user', content: chapterPrompt }],
@@ -767,21 +811,45 @@ Write only the chapter content, no metadata or formatting.`;
         const chapterContent = response.choices[0].message.content.trim();
         const wordCount = this.countWords(chapterContent);
         
+        // Emit generation completion
+        emitGenerationProgress(jobId, {
+          phase: 'chapter_generation',
+          chapterNumber,
+          status: 'ai_completed',
+          wordsGenerated: wordCount,
+          wordTarget: chapterOutline.wordTarget,
+          details: `Chapter ${chapterNumber} generated: ${wordCount} words`
+        });
+        
         // Validate continuity if enabled
         let continuityValidation = { isValid: true, issues: [], suggestions: [] };
-        if (job.humanLikeWriting && job.continuityGuardian !== false) {
+        if (job.humanLikeWriting && job.continuityGuardian !== false && continuityGuardian) {
           try {
-            continuityValidation = this.continuityGuardian.validateChapter(chapterContent, chapterNumber);
+            // Emit validation start
+            emitGenerationProgress(jobId, {
+              phase: 'chapter_generation',
+              chapterNumber,
+              status: 'continuity_validation',
+              details: `Validating continuity for chapter ${chapterNumber}`
+            });
+            
+            continuityValidation = continuityGuardian.validateChapter(chapterContent, chapterNumber);
             if (!continuityValidation.isValid) {
               logger.warn(`Continuity issues detected in chapter ${chapterNumber}:`, continuityValidation.issues);
-              
-              // For proof-of-concept mode, we could retry with specific instructions
-              // For now, we log and continue but mark the issues
             }
             
             // Update story bible with this chapter's information
-            const chapterAnalysis = this.continuityGuardian.analyzeChapter(chapterContent, chapterNumber);
-            this.continuityGuardian.updateStoryBible(chapterAnalysis, chapterNumber);
+            const chapterAnalysis = continuityGuardian.analyzeChapter(chapterContent, chapterNumber);
+            continuityGuardian.updateStoryBible(chapterAnalysis, chapterNumber);
+            
+            // Emit quality metrics
+            emitQualityMetrics(jobId, {
+              chapterNumber,
+              continuityScore: continuityValidation.isValid ? 100 : Math.max(0, 100 - (continuityValidation.issues.length * 20)),
+              issuesFound: continuityValidation.issues.length,
+              storyBibleElements: chapterAnalysis
+            });
+            
           } catch (error) {
             logger.warn(`Continuity validation error for chapter ${chapterNumber}: ${error.message}`);
             // Continue without validation rather than fail
@@ -794,6 +862,16 @@ Write only the chapter content, no metadata or formatting.`;
           response.usage.prompt_tokens,
           response.usage.completion_tokens
         );
+        
+        // Emit cost tracking
+        emitCostTracking(jobId, {
+          chapterNumber,
+          chapterCost: cost,
+          tokensUsed: response.usage.total_tokens,
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          model: 'gpt-4o'
+        });
         
         // Create chapter object
         const chapter = {

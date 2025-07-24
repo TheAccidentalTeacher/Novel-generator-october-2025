@@ -4,6 +4,24 @@ const logger = require('./logger');
 let io;
 const activeConnections = new Map(); // Track active connections for cleanup
 
+// Enhanced event types for monitoring and transparency
+const EventTypes = {
+  // Existing events
+  JOB_UPDATE: 'jobUpdate',
+  CHAPTER_COMPLETE: 'chapterComplete',
+  
+  // New monitoring events
+  STORY_BIBLE_UPDATE: 'storyBibleUpdate',
+  CONTINUITY_ALERT: 'continuityAlert',
+  PLOT_THREAD_UPDATE: 'plotThreadUpdate',
+  CHARACTER_UPDATE: 'characterUpdate',
+  GENERATION_PROGRESS: 'generationProgress',
+  QUALITY_METRICS: 'qualityMetrics',
+  LIVE_TEXT_STREAM: 'liveTextStream',
+  PHASE_TRANSITION: 'phaseTransition',
+  COST_TRACKING: 'costTracking'
+};
+
 const initializeWebSocket = (server) => {
   io = socketIO(server, {
     cors: {
@@ -251,6 +269,95 @@ const gracefulShutdown = () => {
   }
 };
 
+// Enhanced emission functions for monitoring system
+const emitStoryBibleUpdate = (jobId, bibleUpdate) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.STORY_BIBLE_UPDATE, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    ...bibleUpdate
+  });
+  
+  logger.debug(`Story bible update emitted for job ${jobId}:`, bibleUpdate);
+};
+
+const emitContinuityAlert = (jobId, alert) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.CONTINUITY_ALERT, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    severity: alert.severity || 'warning',
+    ...alert
+  });
+  
+  logger.debug(`Continuity alert emitted for job ${jobId}:`, alert);
+};
+
+const emitGenerationProgress = (jobId, progress) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.GENERATION_PROGRESS, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    ...progress
+  });
+  
+  // Don't log every progress update to avoid spam
+};
+
+const emitLiveTextStream = (jobId, textData) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.LIVE_TEXT_STREAM, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    ...textData
+  });
+};
+
+const emitPhaseTransition = (jobId, phase) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.PHASE_TRANSITION, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    ...phase
+  });
+  
+  logger.info(`Phase transition emitted for job ${jobId}: ${phase.from} -> ${phase.to}`);
+};
+
+const emitQualityMetrics = (jobId, metrics) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.QUALITY_METRICS, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    ...metrics
+  });
+  
+  logger.debug(`Quality metrics emitted for job ${jobId}:`, metrics);
+};
+
+const emitCostTracking = (jobId, cost) => {
+  if (!io || !hasSubscribers(jobId)) return;
+  
+  const targetRoom = `job-${jobId}`;
+  io.to(targetRoom).emit(EventTypes.COST_TRACKING, {
+    jobId,
+    timestamp: new Date().toISOString(),
+    ...cost
+  });
+};
+
 module.exports = {
   initializeWebSocket,
   emitJobUpdate,
@@ -258,5 +365,14 @@ module.exports = {
   getConnectionStats,
   broadcastToAllClients,
   gracefulShutdown,
-  cleanupStaleConnections
+  cleanupStaleConnections,
+  // Enhanced monitoring functions
+  emitStoryBibleUpdate,
+  emitContinuityAlert,
+  emitGenerationProgress,
+  emitLiveTextStream,
+  emitPhaseTransition,
+  emitQualityMetrics,
+  emitCostTracking,
+  EventTypes
 };
