@@ -5,6 +5,7 @@ import Header from './components/Header';
 import NovelGenerationForm from './components/NovelGenerationForm';
 import GenerationProgress from './components/GenerationProgress';
 import NovelPreview from './components/NovelPreview';
+import MonitoringDashboard from './components/MonitoringDashboard';
 import './components/ErrorBoundary.css';
 
 // Global error handler for unhandled promise rejections
@@ -91,6 +92,11 @@ function App() {
                       <Route path="/preview/:jobId" element={
                         <ErrorBoundary level="component">
                           <NovelPreview />
+                        </ErrorBoundary>
+                      } />
+                      <Route path="/monitor/:jobId" element={
+                        <ErrorBoundary level="component">
+                          <MonitoringDashboard />
                         </ErrorBoundary>
                       } />
                     </Routes>

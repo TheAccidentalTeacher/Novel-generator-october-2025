@@ -1,0 +1,84 @@
+/* EnhancementsLog.css */
+.enhancements-log {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.enhancements-log.compact .compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.compact-enhancement {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.enhancement-icon {
+  font-size: 1rem;
+}
+
+.enhancement-text {
+  flex: 1;
+}
+
+.enhancement-time {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.no-enhancements {
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+.enhancements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.enhancement-item {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.enhancement-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.enhancement-icon-large {
+  font-size: 1.5rem;
+}
+
+.enhancement-info h4 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.enhancement-timestamp {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.enhancement-description {
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.enhancement-details {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-style: italic;
+}
