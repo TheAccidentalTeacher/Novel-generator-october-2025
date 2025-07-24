@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
 const Job = require('../models/job');
-const monitoringService = require('../services/monitoringService');
+// const monitoringService = require('../services/monitoringService'); // Temporarily disabled
 
 // Get quality metrics for a job
 router.get('/quality-metrics/:jobId', async (req, res) => {
@@ -15,8 +15,8 @@ router.get('/quality-metrics/:jobId', async (req, res) => {
     }
 
     // Get metrics from monitoring service or job metadata
-    const monitoring = monitoringService.getJobMonitoring(jobId);
-    const metrics = monitoring.qualityMetrics || job.metadata?.qualityMetrics || {
+    // const monitoring = monitoringService.getJobMonitoring(jobId); // Temporarily disabled
+    const metrics = job.metadata?.qualityMetrics || {
       humanLikenessScore: 0.75,
       complexityScore: 0.70,
       consistencyScore: 0.80,
@@ -41,8 +41,8 @@ router.get('/story-bible/:jobId', async (req, res) => {
     }
 
     // Get story bible from monitoring service or job metadata
-    const monitoring = monitoringService.getJobMonitoring(jobId);
-    const storyBible = monitoring.storyBible || job.metadata?.storyBible || {
+    // const monitoring = monitoringService.getJobMonitoring(jobId); // Temporarily disabled
+    const storyBible = job.metadata?.storyBible || {
       characters: {},
       plotThreads: [],
       timeline: [],
@@ -68,8 +68,8 @@ router.get('/continuity-alerts/:jobId', async (req, res) => {
     }
 
     // Get alerts from monitoring service or job metadata
-    const monitoring = monitoringService.getJobMonitoring(jobId);
-    const alerts = monitoring.continuityAlerts || job.metadata?.continuityAlerts || [];
+    // const monitoring = monitoringService.getJobMonitoring(jobId); // Temporarily disabled
+    const alerts = job.metadata?.continuityAlerts || [];
 
     res.json({ alerts });
   } catch (error) {
@@ -89,8 +89,8 @@ router.get('/ai-decisions/:jobId', async (req, res) => {
     }
 
     // Get decisions from monitoring service or job metadata
-    const monitoring = monitoringService.getJobMonitoring(jobId);
-    const decisions = monitoring.aiDecisions || job.metadata?.aiDecisions || [];
+    // const monitoring = monitoringService.getJobMonitoring(jobId); // Temporarily disabled
+    const decisions = job.metadata?.aiDecisions || [];
 
     res.json({ decisions });
   } catch (error) {
@@ -128,8 +128,8 @@ router.post('/kill-job/:jobId', async (req, res) => {
 
     // Clean up monitoring data
     try {
-      monitoringService.cleanupJob(jobId);
-      console.log('Monitoring data cleaned up for job:', jobId);
+      // monitoringService.cleanupJob(jobId); // Temporarily disabled
+      console.log('Monitoring data cleanup skipped (service disabled)');
     } catch (cleanupError) {
       console.error('Error cleaning up monitoring data:', cleanupError);
       // Don't fail the request if cleanup fails
@@ -176,7 +176,8 @@ router.post('/cleanup-all-jobs', async (req, res) => {
         
         // Clean up monitoring data
         try {
-          monitoringService.cleanupJob(job._id.toString());
+          // monitoringService.cleanupJob(job._id.toString()); // Temporarily disabled
+          console.log('Monitoring cleanup skipped for job:', job._id);
         } catch (cleanupError) {
           console.error(`Error cleaning up monitoring data for job ${job._id}:`, cleanupError);
           // Continue with other jobs
