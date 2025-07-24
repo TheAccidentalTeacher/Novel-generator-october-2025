@@ -97,6 +97,7 @@ const novelRoutes = require('./routes/novel');
 const healthRoutes = require('./routes/health');
 const adminRoutes = require('./routes/admin');
 const monitorRoutes = require('./routes/monitor');
+const cleanupRoutes = require('./routes/cleanup');
 const recoveryService = require('./services/recoveryService');
 const performanceMonitor = require('./middleware/performanceMonitor');
 const requestLimiter = require('./middleware/requestLimiter');
@@ -382,6 +383,9 @@ app.use('/api/monitor', monitorRoutes);
 
 // Admin routes (for cleaning up stuck jobs)
 app.use('/api/admin', adminRoutes);
+
+// Emergency cleanup routes
+app.use('/api/cleanup', cleanupRoutes);
 
 // Health check routes
 app.use('/health', healthRoutes);
