@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Job = require('../models/job');
 const monitoringService = require('../services/monitoringService');
@@ -102,7 +103,16 @@ router.get('/ai-decisions/:jobId', async (req, res) => {
 router.post('/kill-job/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
+    console.log('Attempting to kill job:', jobId);
+    
+    // Validate ObjectId format using mongoose
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      console.error('Invalid job ID format:', jobId);
+      return res.status(400).json({ error: 'Invalid job ID format' });
+    }
+    
     const job = await Job.findById(jobId);
+    console.log('Job found:', job ? 'Yes' : 'No');
     
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
@@ -114,9 +124,16 @@ router.post('/kill-job/:jobId', async (req, res) => {
     job.error = 'Job manually cancelled by user';
     job.progress.lastActivity = new Date();
     await job.save();
+    console.log('Job marked as cancelled:', jobId);
 
     // Clean up monitoring data
-    monitoringService.cleanupJob(jobId);
+    try {
+      monitoringService.cleanupJob(jobId);
+      console.log('Monitoring data cleaned up for job:', jobId);
+    } catch (cleanupError) {
+      console.error('Error cleaning up monitoring data:', cleanupError);
+      // Don't fail the request if cleanup fails
+    }
 
     res.json({ 
       success: true, 
@@ -125,12 +142,18 @@ router.post('/kill-job/:jobId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error killing job:', error);
-    res.status(500).json({ error: 'Failed to kill job' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to kill job', 
+      details: error.message,
+      jobId: req.params.jobId
+    });
   }
 });
 
 router.post('/cleanup-all-jobs', async (req, res) => {
   try {
+    console.log('Starting cleanup of stuck jobs...');
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     
     // Find all non-completed jobs older than 2 hours
@@ -139,27 +162,49 @@ router.post('/cleanup-all-jobs', async (req, res) => {
       'progress.lastActivity': { $lt: twoHoursAgo }
     });
 
+    console.log(`Found ${stuckJobs.length} stuck jobs to clean up`);
     let cleanedCount = 0;
+    let errorCount = 0;
+    
     for (const job of stuckJobs) {
-      job.status = 'failed';
-      job.currentPhase = 'cleaned_up';
-      job.error = 'Job automatically cleaned up (inactive for >2 hours)';
-      job.progress.lastActivity = new Date();
-      await job.save();
-      
-      // Clean up monitoring data
-      monitoringService.cleanupJob(job._id.toString());
-      cleanedCount++;
+      try {
+        job.status = 'failed';
+        job.currentPhase = 'cleaned_up';
+        job.error = 'Job automatically cleaned up (inactive for >2 hours)';
+        job.progress.lastActivity = new Date();
+        await job.save();
+        
+        // Clean up monitoring data
+        try {
+          monitoringService.cleanupJob(job._id.toString());
+        } catch (cleanupError) {
+          console.error(`Error cleaning up monitoring data for job ${job._id}:`, cleanupError);
+          // Continue with other jobs
+        }
+        
+        cleanedCount++;
+        console.log(`Cleaned up job: ${job._id}`);
+      } catch (jobError) {
+        console.error(`Error cleaning up job ${job._id}:`, jobError);
+        errorCount++;
+      }
     }
 
+    console.log(`Cleanup complete: ${cleanedCount} cleaned, ${errorCount} errors`);
+    
     res.json({ 
       success: true, 
-      message: `Cleaned up ${cleanedCount} stuck jobs`,
-      cleanedJobs: cleanedCount 
+      message: `Cleaned up ${cleanedCount} stuck jobs${errorCount > 0 ? ` (${errorCount} errors)` : ''}`,
+      cleanedJobs: cleanedCount,
+      errors: errorCount
     });
   } catch (error) {
     console.error('Error cleaning up jobs:', error);
-    res.status(500).json({ error: 'Failed to cleanup jobs' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to cleanup jobs', 
+      details: error.message 
+    });
   }
 });
 
