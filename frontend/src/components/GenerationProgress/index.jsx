@@ -10,7 +10,6 @@ import StoryBibleViewer from '../MonitoringDashboard/StoryBibleViewer';
 import ContinuityAlertsPanel from '../MonitoringDashboard/ContinuityAlertsPanel';
 import QualityMetricsDisplay from '../MonitoringDashboard/QualityMetricsDisplay';
 import AIDecisionStream from '../MonitoringDashboard/AIDecisionStream';
-import AdminControls from '../AdminControls/AdminControls';
 import '../../styles/GenerationProgress.css';
 
 function GenerationProgress() {
@@ -171,11 +170,6 @@ function GenerationProgress() {
         {/* Right side - Monitoring dashboard */}
         <div className="progress-monitoring">
           <div className="monitoring-tabs">
-            <div className="monitoring-section">
-              <h3>⚡ Quick Controls</h3>
-              <AdminControls jobId={jobId} />
-            </div>
-
             <div className="monitoring-section">
               <h3>📊 Quality Metrics</h3>
               <QualityMetricsDisplay jobId={jobId} />
