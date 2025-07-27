@@ -1,4 +1,5 @@
 // app.js - Production-ready Express application with comprehensive security
+// FIXED: Remove unused quality metrics UI components (QualityMetricsDisplay)
 // Startup logging - only in development
 if (process.env.NODE_ENV !== 'production') {
   console.log('🚀 Starting Let\'s Write a Book backend...');
