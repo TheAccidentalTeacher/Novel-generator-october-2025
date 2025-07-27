@@ -4,7 +4,6 @@ import { useNovel } from '../../context/NovelContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import StoryBibleViewer from './StoryBibleViewer';
 import ContinuityAlertsPanel from './ContinuityAlertsPanel';
-import QualityMetricsDisplay from './QualityMetricsDisplay';
 import CostTrackingDisplay from './CostTrackingDisplay';
 import GenerationProgressMonitor from './GenerationProgressMonitor';
 import EnhancementsLog from './EnhancementsLog';
@@ -108,11 +107,6 @@ function MonitoringDashboard() {
             </div>
             
             <div className="overview-card">
-              <h3>Quality Summary</h3>
-              <QualityMetricsDisplay metrics={monitoring.qualityMetrics} compact={true} />
-            </div>
-            
-            <div className="overview-card">
               <h3>Cost Summary</h3>
               <CostTrackingDisplay tracking={monitoring.costTracking} compact={true} />
             </div>
@@ -143,10 +137,6 @@ function MonitoringDashboard() {
 
         {activeTab === 'continuity' && (
           <ContinuityAlertsPanel alerts={monitoring.continuityAlerts} />
-        )}
-
-        {activeTab === 'quality' && (
-          <QualityMetricsDisplay metrics={monitoring.qualityMetrics} />
         )}
 
         {activeTab === 'cost' && (

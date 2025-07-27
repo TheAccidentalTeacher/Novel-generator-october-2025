@@ -59,17 +59,14 @@ class AIService {
       // Emit phase transition
       emitPhaseTransition(jobId, {
         from: 'initialization',
-        to: 'analysis',
-        phase: 'Analyzing premise and planning story structure'
+        to: 'outlining',
+        phase: 'Creating detailed outline from synopsis'
       });
       
-      // Phase 1: Premise Analysis
-      await this.analyzePremise(jobId);
-      
-      // Phase 2: Generate Outline
+      // Phase 1: Generate Outline from Synopsis (skip premise analysis)
       await this.generateOutline(jobId);
       
-      // Phase 3: Generate All Chapters
+      // Phase 2: Generate All Chapters
       await this.generateAllChapters(jobId);
       
       // Mark job as completed
@@ -273,7 +270,7 @@ Respond in JSON format:
     emitJobUpdate(jobId, {
       status: job.status,
       currentPhase: job.currentPhase,
-      message: 'Creating detailed chapter outline...'
+      message: 'Creating detailed chapter outline from synopsis...'
     });
     
     try {
@@ -282,10 +279,8 @@ Respond in JSON format:
       const outlinePrompt = `
 Create a ${job.targetChapters}-chapter outline for "${job.title}" (${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}).
 
-PREMISE: ${job.premise}
+SYNOPSIS: ${job.premise}
 WORD COUNT: ${job.targetWordCount} total (~${Math.round(job.targetWordCount / job.targetChapters)} per chapter)
-
-ANALYSIS: ${JSON.stringify(job.analysis || {}, null, 1)}
 
 ${job.humanLikeWriting ? humanWritingEnhancements.prompts.outline.humanLikeAdditions : ''}
 
