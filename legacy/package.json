@@ -1,0 +1,28 @@
+{
+  "name": "letswriteabook",
+  "version": "1.0.0",
+  "description": "AI-powered novel generator deployed on Railway",
+  "scripts": {
+    "test": "node test-local.js",
+    "test:local": "node test-local.js",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm install && npm run build && cd .. && node scripts/copy-frontend.js",
+    "start:local": "cd backend && npm install && node app.js",
+    "deploy:test": "npm run test && echo 'Local tests passed! Ready for deployment'",
+    "railway:deploy": "npm run deploy:test && railway up",
+    "postinstall": "echo 'Root dependencies installed'"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0"
+  }
+}

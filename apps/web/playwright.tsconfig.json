@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "types": ["node", "@playwright/test"],
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "isolatedModules": false
+  },
+  "include": ["playwright.config.ts", "tests/e2e/**/*.ts"]
+}

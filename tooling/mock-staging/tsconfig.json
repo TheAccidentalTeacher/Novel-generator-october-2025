@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+  "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"]
+}

@@ -1,0 +1,38 @@
+{
+  "stage": "after-catch-up-burst",
+  "capturedAt": "2025-10-11T05:47:09.974Z",
+  "metrics": {
+    "totalConnections": 0,
+    "totalSubscriptions": 0,
+    "connectionsPerOrigin": {},
+    "subscribersPerJob": {},
+    "idleClients": 0,
+    "maxConnections": 500,
+    "maxConnectionsPerOrigin": 200,
+    "maxSubscriptionsPerClient": 50,
+    "idleTimeoutMs": 30000,
+    "lastCatchUp": {
+      "load-test-catchup-2c5b099d-5713-482b-8d6e-36ba11ed966e": {
+        "jobId": "load-test-catchup-2c5b099d-5713-482b-8d6e-36ba11ed966e",
+        "replayedEvents": 120,
+        "replaySource": "events",
+        "replayDurationMs": 158,
+        "recordedAt": "2025-10-11T05:45:50.185Z"
+      },
+      "load-test-broadcast-cf400b47-71ba-4f35-b4fa-1c4e4c951b3a": {
+        "jobId": "load-test-broadcast-cf400b47-71ba-4f35-b4fa-1c4e4c951b3a",
+        "replayedEvents": 0,
+        "replaySource": "none",
+        "replayDurationMs": 4101,
+        "recordedAt": "2025-10-11T05:46:02.314Z"
+      },
+      "load-test-catchup-f1ef66c5-1866-45b5-a26d-0be6eafe00e2": {
+        "jobId": "load-test-catchup-f1ef66c5-1866-45b5-a26d-0be6eafe00e2",
+        "replayedEvents": 120,
+        "replaySource": "events",
+        "replayDurationMs": 154,
+        "recordedAt": "2025-10-11T05:47:09.379Z"
+      }
+    }
+  }
+}

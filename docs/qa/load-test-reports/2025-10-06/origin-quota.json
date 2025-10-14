@@ -1,0 +1,200 @@
+{
+  "scenario": "origin-quota",
+  "success": true,
+  "summary": "Accepted 25/28 connections for origin http://localhost:5173.",
+  "details": {
+    "attempts": 28,
+    "accepted": 25,
+    "rejected": 3,
+    "expectedAccepted": 25,
+    "expectedRejected": 3,
+    "perOriginConnections": 25,
+    "metricsBefore": {
+      "totalConnections": 0,
+      "totalSubscriptions": 0,
+      "connectionsPerOrigin": {},
+      "subscribersPerJob": {},
+      "idleClients": 0,
+      "maxConnections": 0,
+      "maxConnectionsPerOrigin": 25,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    },
+    "metricsDuring": {
+      "totalConnections": 25,
+      "totalSubscriptions": 0,
+      "connectionsPerOrigin": {
+        "http://localhost:5173": 25
+      },
+      "subscribersPerJob": {},
+      "idleClients": 25,
+      "maxConnections": 0,
+      "maxConnectionsPerOrigin": 25,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    },
+    "metricsAfter": {
+      "totalConnections": 0,
+      "totalSubscriptions": 0,
+      "connectionsPerOrigin": {},
+      "subscribersPerJob": {},
+      "idleClients": 0,
+      "maxConnections": 0,
+      "maxConnectionsPerOrigin": 25,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    },
+    "connectionAttempts": [
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 15.436300000000017
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 5.433799999999962
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.463899999999967
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.865099999999984
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.5676999999999452
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.3420999999999594
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.4547999999999774
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 8.605600000000095
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.887899999999945
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 3.1761999999999944
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.3360000000000127
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.3080999999999676
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.7912999999999784
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 1.9768000000000256
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.3922000000000025
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.1970000000000027
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.856899999999996
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 1.967300000000023
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.3360999999999876
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.08829999999989
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.185699999999997
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.2769000000000688
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.1485000000000127
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 1.9419000000000324
+      },
+      {
+        "accepted": true,
+        "rejectionMessages": [],
+        "latencyMs": 2.0446999999999207
+      },
+      {
+        "accepted": false,
+        "rejectionMessages": [
+          "Too many connections from this origin. Please retry later."
+        ],
+        "latencyMs": 3.3244999999999436
+      },
+      {
+        "accepted": false,
+        "rejectionMessages": [
+          "Too many connections from this origin. Please retry later."
+        ],
+        "latencyMs": 2.745200000000068
+      },
+      {
+        "accepted": false,
+        "rejectionMessages": [
+          "Too many connections from this origin. Please retry later."
+        ],
+        "latencyMs": 2.4908000000000357
+      }
+    ]
+  },
+  "errors": []
+}

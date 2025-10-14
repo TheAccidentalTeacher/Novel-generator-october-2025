@@ -1,28 +1,52 @@
 {
-  "name": "letswriteabook",
-  "version": "1.0.0",
-  "description": "AI-powered novel generator deployed on Railway",
+  "name": "letswriteabook-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Next-generation LetsWriteABook workspace following the rebuild execution plan.",
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "test": "node test-local.js",
-    "test:local": "node test-local.js",
-    "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend && npm test",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build": "cd frontend && npm install && npm run build && cd .. && node scripts/copy-frontend.js",
-    "start:local": "cd backend && npm install && node app.js",
-    "deploy:test": "npm run test && echo 'Local tests passed! Ready for deployment'",
-    "railway:deploy": "npm run deploy:test && railway up",
-    "postinstall": "echo 'Root dependencies installed'"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write .",
+    "config:lint-env": "ts-node scripts/check-env-alignment.ts",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+  "@types/jest": "^29.5.14",
+  "@types/node": "^20.19.19",
+  "@types/react": "^18.3.3",
+  "@types/react-dom": "^18.3.3",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsdoc": "^48.11.0",
+  "eslint-plugin-jsx-a11y": "^6.10.0",
+    "eslint-plugin-promise": "^7.2.1",
+  "eslint-plugin-react-hooks": "^5.1.0",
+  "eslint-plugin-tailwindcss": "^3.17.5",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.4",
+    "ts-node": "^10.9.2",
+    "turbo": "^2.5.8",
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.1"
   },
-  "dependencies": {
-    "fs-extra": "^11.2.0"
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "pnpm exec eslint --max-warnings=0 --fix",
+      "pnpm exec prettier --write"
+    ],
+    "*.{json,md,mdx,yaml,yml,css,scss,html}": [
+      "pnpm exec prettier --write"
+    ]
   }
 }

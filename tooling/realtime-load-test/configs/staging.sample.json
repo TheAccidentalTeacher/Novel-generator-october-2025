@@ -1,0 +1,31 @@
+{
+  "$schema": "../config.schema.json",
+  "apiUrl": "https://staging-api.your-domain.example",
+  "metricsPath": "/internal/realtime/metrics",
+  "websocketPath": "/ws",
+  "origin": "https://staging.app.your-domain.example",
+  "alternateOrigin": "https://storybook.staging.your-domain.example",
+  "connectTimeoutMs": 7000,
+  "disconnectTimeoutMs": 3000,
+  "redisUrl": "redis://username:password@redis-host:6379",
+  "mongoUri": "mongodb+srv://user:password@cluster.mongodb.net/realtime",
+  "options": {
+    "delayMs": 15,
+    "settleMs": 500,
+    "redisResetSequence": 0,
+    "redisResetDelayMs": 1000
+  },
+  "scenarioOptions": {
+    "catch-up-burst": {
+      "eventCount": 120,
+      "replayThresholdMs": 1500
+    },
+    "broadcast-burst": {
+      "eventCount": 80,
+      "clientCount": 250,
+      "latencyThresholdMs": 600,
+      "redisResetSequence": 40,
+      "redisResetDelayMs": 2000
+    }
+  }
+}

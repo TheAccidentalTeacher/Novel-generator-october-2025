@@ -1,0 +1,44 @@
+{
+  "executedAt": "2025-10-11T05:01:00.494Z",
+  "results": [
+    {
+      "scenario": "catch-up-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\tooling\\realtime-load-test\\docs\\qa\\load-test-reports\\2025-10-10\\staging-catch-up-burst.json",
+      "success": false,
+      "summary": "Scenario execution failed: fetch failed"
+    },
+    {
+      "scenario": "broadcast-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\tooling\\realtime-load-test\\docs\\qa\\load-test-reports\\2025-10-10\\staging-broadcast-burst.json",
+      "success": false,
+      "summary": "Scenario execution failed: fetch failed"
+    }
+  ],
+  "success": false,
+  "metricsSnapshots": [
+    {
+      "stage": "before-suite",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\tooling\\realtime-load-test\\docs\\qa\\load-test-reports\\2025-10-10\\staging-before-suite-metrics.json",
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "stage": "after-catch-up-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\tooling\\realtime-load-test\\docs\\qa\\load-test-reports\\2025-10-10\\staging-after-catch-up-burst-metrics.json",
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "stage": "after-broadcast-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\tooling\\realtime-load-test\\docs\\qa\\load-test-reports\\2025-10-10\\staging-after-broadcast-burst-metrics.json",
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "stage": "after-suite",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\tooling\\realtime-load-test\\docs\\qa\\load-test-reports\\2025-10-10\\staging-after-suite-metrics.json",
+      "success": false,
+      "error": "fetch failed"
+    }
+  ]
+}

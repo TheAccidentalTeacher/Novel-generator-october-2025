@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2025-10-11T02:11:43.909Z",
+  "baseline": {
+    "path": "c:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-before-suite-metrics.json",
+    "stage": "before-suite",
+    "capturedAt": "2025-10-11T02:10:29.081Z"
+  },
+  "target": {
+    "path": "c:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-after-suite-metrics.json",
+    "stage": "after-suite",
+    "capturedAt": "2025-10-11T02:10:53.844Z"
+  },
+  "changes": [
+    {
+      "path": "lastCatchUp.load-test-broadcast-fae99410-f052-456e-83c0-794749eed8ea.replayDurationMs",
+      "target": 3942,
+      "delta": 3942
+    },
+    {
+      "path": "lastCatchUp.load-test-catchup-4b9b15f2-6676-4b93-a925-b50b4c4eb6d8.replayDurationMs",
+      "target": 145,
+      "delta": 145
+    },
+    {
+      "path": "lastCatchUp.load-test-catchup-4b9b15f2-6676-4b93-a925-b50b4c4eb6d8.replayedEvents",
+      "target": 120,
+      "delta": 120
+    }
+  ]
+}

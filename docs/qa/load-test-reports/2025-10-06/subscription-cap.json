@@ -1,0 +1,107 @@
+{
+  "scenario": "subscription-cap",
+  "success": true,
+  "summary": "Accepted 5/8 subscriptions on a single connection (expected 5).",
+  "details": {
+    "attempts": 8,
+    "accepted": 5,
+    "rejected": 3,
+    "expectedAccepted": 5,
+    "expectedRejected": 3,
+    "rejectionMessages": [
+      "Subscription limit reached for this connection.",
+      "Subscription limit reached for this connection.",
+      "Subscription limit reached for this connection."
+    ],
+    "results": [
+      {
+        "jobId": "load-test-job-1",
+        "success": true,
+        "latencyMs": 2.211900000000014
+      },
+      {
+        "jobId": "load-test-job-2",
+        "success": true,
+        "latencyMs": 0.8359000000000378
+      },
+      {
+        "jobId": "load-test-job-3",
+        "success": true,
+        "latencyMs": 2.809600000000046
+      },
+      {
+        "jobId": "load-test-job-4",
+        "success": true,
+        "latencyMs": 2.7941000000000713
+      },
+      {
+        "jobId": "load-test-job-5",
+        "success": true,
+        "latencyMs": 2.730000000000018
+      },
+      {
+        "jobId": "load-test-job-6",
+        "success": false,
+        "message": "Subscription limit reached for this connection.",
+        "latencyMs": 2.606300000000033
+      },
+      {
+        "jobId": "load-test-job-7",
+        "success": false,
+        "message": "Subscription limit reached for this connection.",
+        "latencyMs": 2.056100000000015
+      },
+      {
+        "jobId": "load-test-job-8",
+        "success": false,
+        "message": "Subscription limit reached for this connection.",
+        "latencyMs": 2.5983999999999696
+      }
+    ],
+    "metricsBefore": {
+      "totalConnections": 0,
+      "totalSubscriptions": 0,
+      "connectionsPerOrigin": {},
+      "subscribersPerJob": {},
+      "idleClients": 0,
+      "maxConnections": 0,
+      "maxConnectionsPerOrigin": 0,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    },
+    "metricsDuring": {
+      "totalConnections": 1,
+      "totalSubscriptions": 5,
+      "connectionsPerOrigin": {
+        "http://localhost:5173": 1
+      },
+      "subscribersPerJob": {
+        "load-test-job-1": 1,
+        "load-test-job-2": 1,
+        "load-test-job-3": 1,
+        "load-test-job-4": 1,
+        "load-test-job-5": 1
+      },
+      "idleClients": 1,
+      "maxConnections": 0,
+      "maxConnectionsPerOrigin": 0,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    },
+    "metricsAfter": {
+      "totalConnections": 0,
+      "totalSubscriptions": 0,
+      "connectionsPerOrigin": {},
+      "subscribersPerJob": {},
+      "idleClients": 0,
+      "maxConnections": 0,
+      "maxConnectionsPerOrigin": 0,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    }
+  },
+  "errors": []
+}

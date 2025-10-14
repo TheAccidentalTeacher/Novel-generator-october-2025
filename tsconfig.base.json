@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+  "module": "NodeNext",
+  "moduleResolution": "NodeNext",
+  "lib": ["ES2022"],
+  "types": ["node"],
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@letswriteabook/ai-engine": ["packages/ai-engine/src"],
+      "@letswriteabook/domain": ["packages/domain/src"],
+      "@letswriteabook/persistence": ["packages/persistence/src"],
+  "@letswriteabook/messaging": ["packages/messaging/src"],
+  "@letswriteabook/ui": ["packages/ui/src/index.ts"],
+      "@letswriteabook/ui-tokens": ["packages/ui-tokens/src"],
+      "@letswriteabook/shared-types": ["packages/shared-types/src"],
+      "@/*": ["apps/web/src/*"]
+    }
+  },
+  "ignoreDeprecations": "6.0"
+}

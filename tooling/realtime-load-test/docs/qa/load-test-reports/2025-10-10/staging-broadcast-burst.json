@@ -1,0 +1,23 @@
+{
+  "executedAt": "2025-10-11T05:01:00.488Z",
+  "options": {
+    "attempts": 0,
+    "extras": 3,
+    "jobCount": 0,
+    "delayMs": 25,
+    "settleMs": 500,
+    "eventCount": 50,
+    "clientCount": 200,
+    "replayThresholdMs": 1000,
+    "latencyThresholdMs": 600,
+    "redisResetSequence": 80,
+    "redisResetDelayMs": 1500
+  },
+  "scenario": "broadcast-burst",
+  "success": false,
+  "summary": "Scenario execution failed: fetch failed",
+  "details": {},
+  "errors": [
+    "fetch failed"
+  ]
+}

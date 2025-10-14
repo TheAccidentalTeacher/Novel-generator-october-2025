@@ -1,0 +1,44 @@
+{
+  "executedAt": "2025-10-11T02:10:53.845Z",
+  "results": [
+    {
+      "scenario": "catch-up-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-catch-up-burst.json",
+      "success": true,
+      "summary": "Catch-up replayed 120 events in 148.04ms."
+    },
+    {
+      "scenario": "broadcast-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-broadcast-burst.json",
+      "success": true,
+      "summary": "Broadcast burst p95 latency 107.51ms (<= 600ms)."
+    }
+  ],
+  "success": true,
+  "metricsSnapshots": [
+    {
+      "stage": "before-suite",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-before-suite-metrics.json",
+      "success": true,
+      "recordedAt": "2025-10-11T02:10:29.081Z"
+    },
+    {
+      "stage": "after-catch-up-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-after-catch-up-burst-metrics.json",
+      "success": true,
+      "recordedAt": "2025-10-11T02:10:37.250Z"
+    },
+    {
+      "stage": "after-broadcast-burst",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-after-broadcast-burst-metrics.json",
+      "success": true,
+      "recordedAt": "2025-10-11T02:10:53.842Z"
+    },
+    {
+      "stage": "after-suite",
+      "outputPath": "C:\\Users\\scoso\\WEBSITES\\letswriteabook\\Letswriteabook\\docs\\qa\\load-test-reports\\2025-10-10\\staging-after-suite-metrics.json",
+      "success": true,
+      "recordedAt": "2025-10-11T02:10:53.844Z"
+    }
+  ]
+}

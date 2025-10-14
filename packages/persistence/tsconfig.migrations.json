@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist/migrations",
+    "rootDir": ".",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "migrate-mongo-config.ts",
+    "migrations/**/*.ts",
+    "scripts/**/*.ts",
+    "types/**/*.d.ts"
+  ]
+}

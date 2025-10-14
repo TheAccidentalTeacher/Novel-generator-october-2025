@@ -1,0 +1,23 @@
+{
+  "executedAt": "2025-10-11T05:01:00.479Z",
+  "options": {
+    "attempts": 0,
+    "extras": 3,
+    "jobCount": 0,
+    "delayMs": 25,
+    "settleMs": 500,
+    "eventCount": 120,
+    "clientCount": 200,
+    "replayThresholdMs": 1500,
+    "latencyThresholdMs": 500,
+    "redisResetSequence": 80,
+    "redisResetDelayMs": 1500
+  },
+  "scenario": "catch-up-burst",
+  "success": false,
+  "summary": "Scenario execution failed: fetch failed",
+  "details": {},
+  "errors": [
+    "fetch failed"
+  ]
+}

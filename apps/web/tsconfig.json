@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "rootDir": "src",
+    "composite": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["vite/client", "@testing-library/jest-dom", "@playwright/test"],
+    "paths": {
+      "@/*": ["apps/web/src/*"],
+      "@letswriteabook/config": ["../../packages/config/src"],
+      "@letswriteabook/messaging": ["../../packages/messaging/src"],
+      "@letswriteabook/shared-types": ["../../packages/shared-types/src"],
+  "@letswriteabook/ui": ["../../packages/ui/src/index.ts"],
+      "@letswriteabook/ui-tokens": ["../../packages/ui-tokens/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/config" },
+    { "path": "../../packages/shared-types" },
+    { "path": "../../packages/messaging" },
+    { "path": "../../packages/ui-tokens" }
+  ]
+}

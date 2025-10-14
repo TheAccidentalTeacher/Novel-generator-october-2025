@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Realtime Load Test Harness Config",
+  "description": "Defines reusable defaults for executing realtime load test scenarios.",
+  "type": "object",
+  "properties": {
+    "apiUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "metricsPath": {
+      "type": "string"
+    },
+    "websocketPath": {
+      "type": "string"
+    },
+    "origin": {
+      "type": "string"
+    },
+    "alternateOrigin": {
+      "type": "string"
+    },
+    "connectTimeoutMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "disconnectTimeoutMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verbose": {
+      "type": "boolean"
+    },
+    "redisUrl": {
+      "type": "string"
+    },
+    "mongoUri": {
+      "type": "string"
+    },
+    "options": {
+      "$ref": "#/definitions/harnessOptions"
+    },
+    "scenarioOptions": {
+      "type": "object",
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/definitions/harnessOptions"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "harnessOptions": {
+      "type": "object",
+      "properties": {
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extras": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "jobCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "delayMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "settleMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eventCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "clientCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "replayThresholdMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "latencyThresholdMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "redisResetSequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "redisResetDelayMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

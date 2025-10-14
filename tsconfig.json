@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true
+  },
+  "files": [],
+  "references": [
+    { "path": "./packages/ai-engine" },
+    { "path": "./packages/config" },
+    { "path": "./packages/domain" },
+    { "path": "./packages/messaging" },
+  { "path": "./packages/ui" },
+    { "path": "./packages/persistence" },
+    { "path": "./packages/shared-types" },
+    { "path": "./packages/testing" },
+    { "path": "./packages/ui-tokens" },
+    { "path": "./apps/api" },
+    { "path": "./apps/web" },
+    { "path": "./apps/worker" }
+  ]
+}

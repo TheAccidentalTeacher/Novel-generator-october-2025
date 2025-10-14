@@ -50,3 +50,11 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Local realtime harness secrets
+tooling/realtime-load-test/configs/staging.json
+
+# Secure environment variables backup (never commit)
+.env.secure
+.env.backup
+env-variables-secure.*

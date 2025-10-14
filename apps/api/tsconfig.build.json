@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../../",
+    "noEmit": false,
+    "emitDeclarationOnly": false
+  },
+  "include": [
+    "src/**/*",
+    "../../packages/ai-engine/src/**/*",
+    "../../packages/domain/src/**/*",
+    "../../packages/persistence/src/**/*",
+    "../../packages/messaging/src/**/*",
+    "../../packages/config/src/**/*",
+    "../../packages/shared-types/src/**/*"
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/__tests__/**",
+    "../../packages/**/__tests__/**",
+    "../../packages/**/*.spec.ts",
+    "../../packages/**/*.test.ts",
+    "../../packages/**/*.integration.test.ts"
+  ]
+}

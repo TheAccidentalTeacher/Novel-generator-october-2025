@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "rootDirs": [
+      "src",
+      "../../packages/ai-engine/src",
+      "../../packages/domain/src",
+      "../../packages/persistence/src",
+      "../../packages/messaging/src",
+      "../../packages/config/src",
+      "../../packages/shared-types/src"
+    ],
+    "outDir": "dist",
+    "composite": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/ai-engine" },
+    { "path": "../../packages/domain" },
+    { "path": "../../packages/persistence" },
+    { "path": "../../packages/messaging" },
+    { "path": "../../packages/config" },
+    { "path": "../../packages/shared-types" }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": false,
+    "composite": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/domain" },
+    { "path": "../../packages/shared-types" },
+    { "path": "../../packages/persistence" },
+    { "path": "../../packages/messaging" }
+  ]
+}

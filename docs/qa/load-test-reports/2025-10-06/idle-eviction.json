@@ -1,0 +1,120 @@
+{
+  "scenario": "idle-eviction",
+  "success": true,
+  "summary": "All 10 clients were disconnected due to inactivity within 2250ms.",
+  "details": {
+    "attempts": 10,
+    "accepted": 10,
+    "idleTimeoutMs": 2000,
+    "settleBuffer": 250,
+    "metricsBefore": {
+      "totalConnections": 0,
+      "totalSubscriptions": 0,
+      "connectionsPerOrigin": {},
+      "subscribersPerJob": {},
+      "idleClients": 0,
+      "maxConnections": 20,
+      "maxConnectionsPerOrigin": 0,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    },
+    "metricsAfter": {
+      "totalConnections": 0,
+      "totalSubscriptions": 0,
+      "connectionsPerOrigin": {},
+      "subscribersPerJob": {},
+      "idleClients": 0,
+      "maxConnections": 20,
+      "maxConnectionsPerOrigin": 0,
+      "maxSubscriptionsPerClient": 5,
+      "idleTimeoutMs": 2000,
+      "lastCatchUp": {}
+    },
+    "stillConnected": [],
+    "missingError": [],
+    "watchers": [
+      {
+        "socketId": "ffYB0qxa28Q6wpcYAAAB",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1700.2392000000002
+      },
+      {
+        "socketId": "B7qipQSNs-w43wEqAAAD",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1729.9761
+      },
+      {
+        "socketId": "VtGBRsPbdFTm9W1WAAAF",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1761.3271000000002
+      },
+      {
+        "socketId": "FekhY0OtZUYdSbD_AAAH",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1791.939
+      },
+      {
+        "socketId": "Q4BEvU_n6B1m_UfFAAAJ",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1822.7344999999998
+      },
+      {
+        "socketId": "yU6rBYkmkjfHcXzJAAAL",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1853.961
+      },
+      {
+        "socketId": "QzNT1y8luWB4enPtAAAN",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1885.4657
+      },
+      {
+        "socketId": "HB1fRcFMv_FGuRVuAAAP",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1916.0539999999999
+      },
+      {
+        "socketId": "sFXj3LhLYggEwewfAAAR",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1947.3651000000002
+      },
+      {
+        "socketId": "w3rJra2pTASQ_XZEAAAT",
+        "errorMessages": [
+          "Disconnected due to inactivity."
+        ],
+        "disconnected": true,
+        "disconnectLatencyMs": 1978.5183
+      }
+    ]
+  },
+  "errors": []
+}

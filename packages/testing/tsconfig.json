@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "noEmit": false
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../ai-engine" },
+    { "path": "../domain" },
+    { "path": "../shared-types" }
+  ]
+}

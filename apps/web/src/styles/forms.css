@@ -1,0 +1,59 @@
+/* Form error and warning styles */
+
+/* Error styling for form validation feedback */
+.form-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.form-errors {
+  padding: 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.form-error__summary {
+  color: #dc2626;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Submission error banner */
+.form-submit-error {
+  padding: 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Warning styling for token limit notifications */
+.form-warning {
+  padding: 1rem;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.form-warning__message {
+  color: #d97706;
+  font-weight: 500;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Input error state */
+.input--error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.input--error:focus {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}

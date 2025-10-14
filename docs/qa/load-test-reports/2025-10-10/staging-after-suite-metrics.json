@@ -1,0 +1,45 @@
+{
+  "stage": "after-suite",
+  "capturedAt": "2025-10-11T02:10:53.844Z",
+  "metrics": {
+    "totalConnections": 0,
+    "totalSubscriptions": 0,
+    "connectionsPerOrigin": {},
+    "subscribersPerJob": {},
+    "idleClients": 0,
+    "maxConnections": 500,
+    "maxConnectionsPerOrigin": 200,
+    "maxSubscriptionsPerClient": 50,
+    "idleTimeoutMs": 30000,
+    "lastCatchUp": {
+      "load-test-catchup-da6faa88-04fc-47b2-96c8-e98c4a1a0d20": {
+        "jobId": "load-test-catchup-da6faa88-04fc-47b2-96c8-e98c4a1a0d20",
+        "replayedEvents": 120,
+        "replaySource": "events",
+        "replayDurationMs": 264,
+        "recordedAt": "2025-10-11T02:06:26.040Z"
+      },
+      "load-test-broadcast-7f20450c-5166-4e47-8d3e-deea280519ab": {
+        "jobId": "load-test-broadcast-7f20450c-5166-4e47-8d3e-deea280519ab",
+        "replayedEvents": 0,
+        "replaySource": "none",
+        "replayDurationMs": 4184,
+        "recordedAt": "2025-10-11T02:06:37.649Z"
+      },
+      "load-test-catchup-4b9b15f2-6676-4b93-a925-b50b4c4eb6d8": {
+        "jobId": "load-test-catchup-4b9b15f2-6676-4b93-a925-b50b4c4eb6d8",
+        "replayedEvents": 120,
+        "replaySource": "events",
+        "replayDurationMs": 145,
+        "recordedAt": "2025-10-11T02:10:36.638Z"
+      },
+      "load-test-broadcast-fae99410-f052-456e-83c0-794749eed8ea": {
+        "jobId": "load-test-broadcast-fae99410-f052-456e-83c0-794749eed8ea",
+        "replayedEvents": 0,
+        "replaySource": "none",
+        "replayDurationMs": 3942,
+        "recordedAt": "2025-10-11T02:10:47.950Z"
+      }
+    }
+  }
+}

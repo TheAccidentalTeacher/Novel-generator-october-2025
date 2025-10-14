@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TURBO_TELEMETRY_DISABLED: "1"
+      MONGODB_MIGRATIONS_URI: mongodb://localhost:27017/letswriteabook_ci
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache turbo artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo
+            node_modules/.cache
+          key: ${{ runner.os }}-turbo-${{ hashFiles('**/pnpm-lock.yaml', '**/package.json', 'turbo.json') }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Apply persistence migrations
+        run: pnpm --filter "@letswriteabook/persistence" run migrate up
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run persistence integration tests
+        run: pnpm --filter "@letswriteabook/persistence" run test:integration
+
+      - name: Check environment alignment
+        run: pnpm config:lint-env
