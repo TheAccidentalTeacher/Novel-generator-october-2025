@@ -12,15 +12,19 @@ import { registerDesignTokens } from '@/app/styles/register-tokens';
 const mountNode = document.getElementById('root');
 
 if (!mountNode) {
-	throw new Error('Failed to locate the root element for the web application.');
+  throw new Error('Failed to locate the root element for the web application.');
 }
 
 registerDesignTokens();
 
 createRoot(mountNode).render(
-	<StrictMode>
-		<AppProviders>
-			<RouterProvider router={router} />
-		</AppProviders>
-	</StrictMode>
+  <StrictMode>
+    <AppProviders>
+      {/* Opt-in to React Router v7 startTransition behavior to remove the deprecation warning. */}
+      <RouterProvider
+        router={router}
+        future={{ v7_startTransition: true } as Record<string, unknown>}
+      />
+    </AppProviders>
+  </StrictMode>,
 );

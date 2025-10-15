@@ -1,4 +1,4 @@
-import { startWorker } from './main.js';
+import { startWorker } from './main';
 
 void startWorker().catch((error) => {
   const message = error instanceof Error ? error.message : String(error);

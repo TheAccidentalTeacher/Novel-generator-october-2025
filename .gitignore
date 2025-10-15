@@ -5,11 +5,18 @@ yarn-debug.log*
 yarn-error.log*
 
 # Environment variables
+# Root-level env files
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+# Ignore env files anywhere in the repo (apps/*, packages/*, etc.)
+**/.env
+**/.env.*
+# But keep documented examples/defaults tracked
+!**/.env.example
+!**/.env.defaults
 
 # Build outputs
 dist/
