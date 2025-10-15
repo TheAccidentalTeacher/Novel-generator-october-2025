@@ -1,6 +1,6 @@
 # Frontend Realtime Integration Guide
 
-_Last Updated: 2025-10-07_<br>
+_Last Updated: 2025-10-14_<br>
 _Owner: Frontend Engineer_
 
 This guide explains how the rebuilt web application should consume the realtime websocket contract exposed by the API. It covers connection setup, subscription lifecycles, event handling, state management, and observability expectations.
@@ -11,6 +11,7 @@ This guide explains how the rebuilt web application should consume the realtime 
 
 - Ensure the API service is reachable and `SOCKET_CLIENT_ORIGIN` includes the web app URL.
 - Populate `.env.local` (or the Vite equivalent) with `VITE_API_BASE_URL` pointing to the API host.
+  - The websocket path is always `/ws`; ensure your gateway is reachable at `${VITE_API_BASE_URL}/ws`.
 - Install required dependencies in `apps/web`:
   - `socket.io-client`
   - `@tanstack/react-query`
@@ -43,9 +44,7 @@ export function getRealtimeSocket(options: RealtimeSocketOptions): Socket {
     path: '/ws',
     transports: ['websocket'],
     withCredentials: true,
-    extraHeaders: options.authToken
-      ? { Authorization: `Bearer ${options.authToken}` }
-      : undefined,
+    extraHeaders: options.authToken ? { Authorization: `Bearer ${options.authToken}` } : undefined,
   });
 
   socket.on('connect_error', (error) => {
@@ -91,17 +90,11 @@ export function useNovelRealtime({ jobId, apiBaseUrl }: UseNovelRealtimeOptions)
     const socket = getRealtimeSocket({ apiBaseUrl });
 
     const handleGeneration = (payload: GenerationRealtimeEvent) => {
-      queryClient.setQueryData(['jobs', jobId, 'generation'], (prev = []) => [
-        ...prev,
-        payload,
-      ]);
+      queryClient.setQueryData(['jobs', jobId, 'generation'], (prev = []) => [...prev, payload]);
     };
 
     const handleDomain = (payload: DomainRealtimeEvent) => {
-      queryClient.setQueryData(['jobs', jobId, 'domain-events'], (prev = []) => [
-        ...prev,
-        payload,
-      ]);
+      queryClient.setQueryData(['jobs', jobId, 'domain-events'], (prev = []) => [...prev, payload]);
     };
 
     const handleStatus = (payload: JobStatusRealtimeEvent) => {
@@ -137,6 +130,8 @@ export function useNovelRealtime({ jobId, apiBaseUrl }: UseNovelRealtimeOptions)
 
 The gateway automatically replays stored events after `novel.subscribed`, so the hook only needs to ensure the query caches are ready to accept a burst of messages. Initial cache seeds can be loaded via REST endpoints (`/novel/:id/events`, `/status`) to avoid empty UI states while the replay arrives.
 
+If the API is offline or not reachable, the web app will surface placeholder data clearly (tagged as placeholder). Point `VITE_API_BASE_URL` to a live API to exit placeholder mode.
+
 ---
 
 ## Deriving UI State
@@ -161,11 +156,14 @@ export function useNovelProgress(jobId: string) {
     queryKey: ['jobs', jobId, 'status'],
   });
 
-  return useMemo(() => ({
-    generation,
-    domainEvents,
-    status,
-  }), [generation, domainEvents, status]);
+  return useMemo(
+    () => ({
+      generation,
+      domainEvents,
+      status,
+    }),
+    [generation, domainEvents, status],
+  );
 }
 ```
 
