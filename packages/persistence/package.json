@@ -17,6 +17,8 @@
     "backfill:run": "ts-node --project backfill/tsconfig.json --esm ./backfill/scripts/run-backfill.ts"
   },
   "dependencies": {
+    "@letswriteabook/domain": "workspace:*",
+    "@letswriteabook/shared-types": "workspace:*",
     "@typegoose/typegoose": "^11.6.1",
     "mongoose": "^7.8.0",
     "migrate-mongo": "^11.0.0",

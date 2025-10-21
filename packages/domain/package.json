@@ -6,7 +6,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-  "lint": "eslint --no-error-on-unmatched-pattern 'src/**/*.{ts,tsx}'",
-  "test": "jest --passWithNoTests"
+    "lint": "eslint --no-error-on-unmatched-pattern 'src/**/*.{ts,tsx}'",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@letswriteabook/shared-types": "workspace:*"
   }
 }

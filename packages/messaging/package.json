@@ -10,6 +10,8 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
+    "@letswriteabook/domain": "workspace:*",
+    "@letswriteabook/shared-types": "workspace:*",
     "zod": "^3.23.8"
   }
 }
