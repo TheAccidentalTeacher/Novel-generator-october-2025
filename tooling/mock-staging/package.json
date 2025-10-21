@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "echo 'No build needed - runs from source with ts-node'",
     "dev": "ts-node --esm src/server.ts",
     "smoke": "ts-node --esm src/smoke.ts"
   },
