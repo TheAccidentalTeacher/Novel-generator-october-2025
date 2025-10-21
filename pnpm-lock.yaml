@@ -306,12 +306,24 @@ importers:
 
   packages/messaging:
     dependencies:
+      '@letswriteabook/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@letswriteabook/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
       zod:
         specifier: ^3.23.8
         version: 3.23.8
 
   packages/persistence:
     dependencies:
+      '@letswriteabook/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@letswriteabook/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
       '@typegoose/typegoose':
         specifier: ^11.6.1
         version: 11.8.1(mongoose@7.8.7)
